@@ -1,0 +1,4 @@
+# GM_Bastralaya — User Credentials Store
+# Format: one JSON record per line  |  DO NOT edit manually
+# Last updated: 2026-02-27T04:05:17.385684+00:00
+

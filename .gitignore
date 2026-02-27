@@ -1,0 +1,49 @@
+# --- Frontend (Vite + React + Shadcn) ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+
+# Shadcn/UI specific (if you customize the registry)
+.shotgun/
+
+# --- Backend (FastAPI + Python) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+build/
+develop-eggs/
+downloads/
+eggs/
+.lib/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Environment & Secrets ---
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.flaskenv
+
+# --- IDE & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
