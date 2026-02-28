@@ -1,3 +1,4 @@
+
 from fastapi import (
     FastAPI,
     APIRouter,
@@ -350,6 +351,11 @@ class Product(BaseModel):
     sku: str
     category_id: Optional[str] = None
     default_whatsapp_number_id: Optional[str] = None
+    # ── Extra product detail fields ──────────────────────
+    product_code: Optional[str] = None  # e.g. "Ladki Bahin"
+    saree_length: Optional[str] = None  # e.g. "6.2 Meters"
+    blouse_length: Optional[str] = None  # e.g. "0.80 Meters"
+    care_instruction: Optional[str] = None  # e.g. "Dry clean only"
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -363,6 +369,10 @@ class ProductCreate(BaseModel):
     sku: str
     category_id: Optional[str] = None
     default_whatsapp_number_id: Optional[str] = None
+    product_code: Optional[str] = None
+    saree_length: Optional[str] = None
+    blouse_length: Optional[str] = None
+    care_instruction: Optional[str] = None
 
 
 class ProductUpdate(BaseModel):
@@ -373,6 +383,10 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     category_id: Optional[str] = None
     default_whatsapp_number_id: Optional[str] = None
+    product_code: Optional[str] = None
+    saree_length: Optional[str] = None
+    blouse_length: Optional[str] = None
+    care_instruction: Optional[str] = None
 
 
 class ProductWithDetails(Product):
@@ -647,6 +661,44 @@ async def delete_category(
     return {"message": "Category deleted"}
 
 
+@api_router.post(
+    "/categories/{category_id}/image/upload", response_model=CategoryResponse
+)
+async def upload_category_image(
+    category_id: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_role(["admin", "shopowner"])),
+):
+    doc = _find_one(CATEGORIES_FILE, {"id": category_id})
+    if not doc:
+        raise HTTPException(404, "Category not found")
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, "Unsupported type. Use JPEG/PNG/WebP/GIF.")
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_BYTES:
+        raise HTTPException(400, "File too large (max 10MB)")
+    old_url = doc.get("image_url", "")
+    if old_url and "/uploads/" in old_url:
+        old_path = UPLOADS_DIR / old_url.split("/uploads/")[-1]
+        if old_path.exists():
+            old_path.unlink()
+    ext = Path(file.filename or "img.jpg").suffix.lower() or ".jpg"
+    filename = f"cat_{category_id}_{uuid.uuid4().hex[:8]}{ext}"
+    (UPLOADS_DIR / filename).write_bytes(contents)
+    base_url = os.environ.get("BASE_URL", "http://localhost:8000")
+    url = f"{base_url}/uploads/{filename}"
+    updated = _update_one(CATEGORIES_FILE, {"id": category_id}, {"image_url": url})
+    log_audit(
+        current_user.id,
+        "update",
+        "category",
+        category_id,
+        before=doc,
+        after={"image_url": url},
+    )
+    return CategoryResponse(**updated)
+
+
 # ══════════════════════════════════════════════════════
 # PRODUCTS
 # ══════════════════════════════════════════════════════
@@ -658,7 +710,7 @@ async def get_products(
     max_price: Optional[float] = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    limit: int = Query(default=50, le=500),
+    limit: int = Query(default=50, le=10000),
     skip: int = 0,
     include_inactive: bool = False,
 ):

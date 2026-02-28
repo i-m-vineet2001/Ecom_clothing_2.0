@@ -30,5 +30,13 @@
     "role": "viewer",
     "password_hash": "$2b$12$6yNbtsfrEW1AE2OaZQO7/.LXkSOb2kIz3E0KrgNd9MeWtqQNlQFQm",
     "created_at": "2026-02-27 09:47:23.258114+00:00"
+  },
+  {
+    "id": "e440b6b5-6148-499b-b74e-91a67f9ec4c2",
+    "name": "ayushi pagal dutta",
+    "email": "ayushi@gmail.com",
+    "role": "admin",
+    "password_hash": "$2b$12$/TrT5eumm/HauMVOT7ixL.kVp4VmCRM/anXi2RwgVSKEHbhCtW1VG",
+    "created_at": "2026-02-28 03:17:56.201220+00:00"
   }
 ]

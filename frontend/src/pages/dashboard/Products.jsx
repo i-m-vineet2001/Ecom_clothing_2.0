@@ -32,233 +32,13 @@ import {
   List,
   Search,
   Filter,
-  ChevronDown,
 } from "lucide-react";
 import { formatPrice } from "../../lib/utils";
 import api from "../../lib/api";
 import { toast } from "sonner";
-import { Badge } from "../../components/ui/badge";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuPortal, // <--- 1. Make sure this is imported
-} from "@/components/ui/dropdown-menu";
-// ══════════════════════════════════════════════════════════════════════════════
-// IMAGE UPLOAD PANEL
-// ══════════════════════════════════════════════════════════════════════════════
-const ImageUploadPanel = ({ product, onClose }) => {
-  const [images, setImages] = useState([]);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState([]);
-
-  useEffect(() => {
-    loadImages();
-  }, []);
-
-  const loadImages = async () => {
-    try {
-      const res = await api.get(`/products/${product.id}/images`);
-      setImages(res.data);
-    } catch {
-      toast.error("Failed to load images");
-    }
-  };
-
-  const handleFiles = async (files) => {
-    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!arr.length) {
-      toast.error("Please select image files only");
-      return;
-    }
-    setUploading(true);
-    setProgress(arr.map((f) => ({ name: f.name, status: "pending" })));
-    for (let i = 0; i < arr.length; i++) {
-      setProgress((p) =>
-        p.map((x, idx) => (idx === i ? { ...x, status: "uploading" } : x)),
-      );
-      const form = new FormData();
-      form.append("file", arr[i]);
-      form.append("alt", arr[i].name.replace(/\.[^/.]+$/, ""));
-      form.append("sort_order", String(images.length + i));
-      try {
-        await api.post(`/products/${product.id}/images/upload`, form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        setProgress((p) =>
-          p.map((x, idx) => (idx === i ? { ...x, status: "done" } : x)),
-        );
-      } catch (e) {
-        setProgress((p) =>
-          p.map((x, idx) => (idx === i ? { ...x, status: "error" } : x)),
-        );
-        toast.error(
-          `${arr[i].name}: ${e.response?.data?.detail || "upload failed"}`,
-        );
-      }
-    }
-    setUploading(false);
-    await loadImages();
-    setProgress([]);
-    toast.success(`Done! ${arr.length} image(s) processed.`);
-  };
-
-  const handleDelete = async (imageId) => {
-    try {
-      await api.delete(`/products/${product.id}/images/${imageId}`);
-      setImages((prev) => prev.filter((i) => i.id !== imageId));
-      toast.success("Image removed");
-    } catch {
-      toast.error("Delete failed");
-    }
-  };
-
-  const statusIcon = {
-    pending: "⏳",
-    uploading: "⬆️",
-    done: "✅",
-    error: "❌",
-  };
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2 pb-3 border-b border-[#F2F0EB]">
-        <ImageIcon className="w-4 h-4 text-[#C5A059]" />
-        <p className="text-sm text-gray-600">
-          Images for <strong className="text-[#2C2C2C]">{product.title}</strong>
-        </p>
-        {images.length > 0 && (
-          <span className="ml-auto bg-[#C5A059]/10 text-[#C5A059] text-xs px-2 py-0.5 rounded-full font-semibold">
-            {images.length} photo{images.length !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          handleFiles(e.dataTransfer.files);
-        }}
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-          dragOver
-            ? "border-[#C5A059] bg-[#FDF8F0] scale-[1.01]"
-            : "border-gray-200 hover:border-[#C5A059]/60"
-        }`}
-      >
-        <Upload
-          className={`w-8 h-8 mx-auto mb-3 ${dragOver ? "text-[#C5A059]" : "text-gray-300"}`}
-        />
-        <p className="text-sm font-semibold text-[#2C2C2C] mb-1">
-          {dragOver ? "Drop to upload!" : "Drag & drop multiple images here"}
-        </p>
-        <p className="text-xs text-gray-400 mb-4">
-          JPEG · PNG · WebP · GIF · Max 10 MB each
-        </p>
-        <label className="inline-block cursor-pointer">
-          <span
-            className={`inline-flex items-center gap-2 px-5 py-2.5 text-xs tracking-widest uppercase font-bold transition-all rounded-none ${
-              uploading
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-[#2C2C2C] text-white hover:bg-[#C5A059]"
-            }`}
-          >
-            <Upload className="w-3.5 h-3.5" />
-            {uploading ? "Uploading…" : "Browse Files"}
-          </span>
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            disabled={uploading}
-            className="hidden"
-            onChange={(e) => handleFiles(e.target.files)}
-          />
-        </label>
-      </div>
-      {progress.length > 0 && (
-        <div className="bg-[#F9F8F5] rounded-lg p-3 space-y-1.5">
-          {progress.map((p, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm">
-              <span>{statusIcon[p.status]}</span>
-              <span className="flex-1 truncate text-gray-700 text-xs">
-                {p.name}
-              </span>
-              <span className="text-xs text-gray-400 capitalize">
-                {p.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-      {images.length > 0 ? (
-        <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-            All Images — first is the cover
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            {images.map((img, idx) => (
-              <div
-                key={img.id}
-                className="relative group aspect-square bg-[#F2F0EB] rounded-lg overflow-hidden"
-              >
-                <img
-                  src={img.url}
-                  alt={img.alt || ""}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
-                  <button
-                    onClick={() => handleDelete(img.id)}
-                    className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-opacity"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                {idx === 0 && (
-                  <span className="absolute top-2 left-2 bg-[#C5A059] text-white text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">
-                    Cover
-                  </span>
-                )}
-              </div>
-            ))}
-            <label className="aspect-square bg-[#F9F8F5] rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C5A059] flex items-center justify-center cursor-pointer transition-colors group">
-              <div className="text-center">
-                <Plus className="w-5 h-5 text-gray-300 group-hover:text-[#C5A059] mx-auto transition-colors" />
-                <p className="text-[10px] text-gray-400 mt-1">Add more</p>
-              </div>
-              <input
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-            </label>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-10 bg-[#F9F8F5] rounded-xl">
-          <ImageIcon className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-          <p className="text-sm text-gray-400">No images yet — upload above</p>
-        </div>
-      )}
-      <div className="flex justify-end pt-3 border-t border-[#F2F0EB]">
-        <Button variant="outline" onClick={onClose} className="text-sm px-6">
-          Done
-        </Button>
-      </div>
-    </div>
-  );
-};
+// ── ImageUploader is shared component — imported from components/
+import ImageUploader from "../../components/ImageUploader";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DISCOUNT PANEL
@@ -556,6 +336,10 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
         sku: editing.sku,
         category_id: editing.category_id || "",
         active: editing.active,
+        product_code: editing.product_code || "",
+        saree_length: editing.saree_length || "",
+        blouse_length: editing.blouse_length || "",
+        care_instruction: editing.care_instruction || "",
       });
     } else {
       setForm({
@@ -565,6 +349,10 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
         sku: "",
         category_id: "",
         active: true,
+        product_code: "",
+        saree_length: "",
+        blouse_length: "",
+        care_instruction: "",
       });
     }
     // Focus title after open
@@ -598,6 +386,18 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
       sku: form.sku.trim(),
       active: form.active,
       ...(form.category_id ? { category_id: form.category_id } : {}),
+      ...(form.product_code?.trim()
+        ? { product_code: form.product_code.trim() }
+        : {}),
+      ...(form.saree_length?.trim()
+        ? { saree_length: form.saree_length.trim() }
+        : {}),
+      ...(form.blouse_length?.trim()
+        ? { blouse_length: form.blouse_length.trim() }
+        : {}),
+      ...(form.care_instruction?.trim()
+        ? { care_instruction: form.care_instruction.trim() }
+        : {}),
     };
 
     try {
@@ -829,6 +629,89 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
               )}
             </div>
 
+            {/* ── Product Detail Fields ───────────────── */}
+            <div className="border-t border-[#F2F0EB] pt-5">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                Product Details{" "}
+                <span className="font-normal normal-case text-gray-300 ml-1">
+                  (shown on product page)
+                </span>
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="pf-code"
+                    className="text-sm font-semibold text-[#2C2C2C]"
+                  >
+                    Product Code
+                  </Label>
+                  <Input
+                    id="pf-code"
+                    value={form.product_code}
+                    onChange={(e) =>
+                      setForm({ ...form, product_code: e.target.value })
+                    }
+                    placeholder="e.g. Ladki Bahin"
+                    className="mt-1.5 bg-white border-[#E8E5E0] focus:border-[#C5A059] h-10"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label
+                      htmlFor="pf-saree"
+                      className="text-sm font-semibold text-[#2C2C2C]"
+                    >
+                      Saree Length
+                    </Label>
+                    <Input
+                      id="pf-saree"
+                      value={form.saree_length}
+                      onChange={(e) =>
+                        setForm({ ...form, saree_length: e.target.value })
+                      }
+                      placeholder="e.g. 6.2 Meters"
+                      className="mt-1.5 bg-white border-[#E8E5E0] focus:border-[#C5A059] h-10"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="pf-blouse"
+                      className="text-sm font-semibold text-[#2C2C2C]"
+                    >
+                      Blouse Piece Length
+                    </Label>
+                    <Input
+                      id="pf-blouse"
+                      value={form.blouse_length}
+                      onChange={(e) =>
+                        setForm({ ...form, blouse_length: e.target.value })
+                      }
+                      placeholder="e.g. 0.80 Meters"
+                      className="mt-1.5 bg-white border-[#E8E5E0] focus:border-[#C5A059] h-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label
+                    htmlFor="pf-care"
+                    className="text-sm font-semibold text-[#2C2C2C]"
+                  >
+                    Care Instruction
+                  </Label>
+                  <Textarea
+                    id="pf-care"
+                    value={form.care_instruction}
+                    onChange={(e) =>
+                      setForm({ ...form, care_instruction: e.target.value })
+                    }
+                    placeholder="e.g. Dry clean only. Do not bleach."
+                    rows={2}
+                    className="mt-1.5 bg-white border-[#E8E5E0] focus:border-[#C5A059] resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Price preview card */}
             {form.base_price && parseFloat(form.base_price) > 0 && (
               <div className="bg-[#F9F8F5] border border-[#F2F0EB] rounded-xl p-4">
@@ -927,28 +810,11 @@ const Products = () => {
     fetchAll();
   }, []);
 
-  // const fetchAll = async () => {
-  //   try {
-  //     // include_inactive=true so dashboard shows ALL products including hidden
-  //     const [pRes, cRes] = await Promise.all([
-  //       api.get("/products?limit=1000&include_inactive=true"),
-  //       api.get("/categories"),
-  //     ]);
-  //     setProducts(pRes.data);
-  //     setCategories(cRes.data);
-  //   } catch {
-  //     toast.error("Failed to load data");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Inside Products.jsx
   const fetchAll = async () => {
     try {
+      // include_inactive=true so dashboard shows ALL products including hidden
       const [pRes, cRes] = await Promise.all([
-        // Change 1000 to 500 here
-        api.get("/products?limit=500&include_inactive=true"),
+        api.get("/products?limit=1000&include_inactive=true"),
         api.get("/categories"),
       ]);
       setProducts(pRes.data);
@@ -1104,13 +970,38 @@ const Products = () => {
             </DialogTitle>
           </DialogHeader>
           {imgProduct && (
-            <ImageUploadPanel
-              product={imgProduct}
-              onClose={() => {
-                setImgProduct(null);
-                fetchAll();
-              }}
-            />
+            <div className="space-y-2 pt-1">
+              <p className="text-sm text-gray-500 pb-2 border-b border-[#F2F0EB]">
+                Managing images for{" "}
+                <strong className="text-[#2C2C2C]">{imgProduct.title}</strong>
+              </p>
+              <ImageUploader
+                uploadUrl={`/products/${imgProduct.id}/images/upload`}
+                multiple={true}
+                currentImages={imgProduct.images || []}
+                onDeleteUrl={`/products/${imgProduct.id}/images`}
+                onChanged={() => {
+                  // Refresh images for this product
+                  api.get(`/products/${imgProduct.id}`).then((res) => {
+                    setImgProduct(res.data);
+                    setProducts((prev) =>
+                      prev.map((p) => (p.id === imgProduct.id ? res.data : p)),
+                    );
+                  });
+                }}
+              />
+              <div className="flex justify-end pt-3 border-t border-[#F2F0EB]">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setImgProduct(null);
+                    fetchAll();
+                  }}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -1178,8 +1069,7 @@ const Products = () => {
           )}
         </div>
       ) : (
-        // <div className="bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
-        <div className="bg-white border border-[#F2F0EB] rounded-xl">
+        <div className="bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-[#F9F8F5] hover:bg-[#F9F8F5]">
@@ -1201,16 +1091,9 @@ const Products = () => {
                 const isToggling = toggling === p.id;
 
                 return (
-                  // <TableRow
-                  //   key={p.id}
-                  //   className={`hover:bg-[#F9F8F5]/60 transition-colors ${!p.active ? "opacity-60" : ""}`}
-                  //   data-testid="product-row"
-                  // >
                   <TableRow
                     key={p.id}
-                    className={`hover:bg-[#F9F8F5]/60 transition-colors relative ${
-                      !p.active ? "opacity-60" : ""
-                    } ${imgProduct?.id === p.id || discProduct?.id === p.id ? "z-50" : "z-0"}`}
+                    className={`hover:bg-[#F9F8F5]/60 transition-colors ${!p.active ? "opacity-60" : ""}`}
                     data-testid="product-row"
                   >
                     {/* Thumbnail */}
@@ -1307,39 +1190,47 @@ const Products = () => {
 
                     {/* Actions */}
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Badge variant="outline" className="cursor-pointer">
-                            {/* FIX: changed 'user.role' to 'p.active ? "Active" : "Inactive"' 
-           or whatever product property you want to show */}
-                            {p.active ? "Active" : "Inactive"}{" "}
-                            <ChevronDown className="ml-1 w-3 h-3" />
-                          </Badge>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuPortal>
-                          <DropdownMenuContent className="z-[100] bg-white border shadow-xl p-2 rounded-lg">
-                            <div className="px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase">
-                              Product Actions
-                            </div>
-                            {/* FIX: changed updateRole(user.id) to your product functions */}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditing(p);
-                                setFormOpen(true);
-                              }}
-                            >
-                              Edit Product
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(p.id, p.title)}
-                              className="text-red-600"
-                            >
-                              Delete Product
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenu>
+                      <div className="flex items-center justify-end gap-1 pr-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600 text-gray-400"
+                          title="Manage images"
+                          onClick={() => setImgProduct(p)}
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-amber-50 hover:text-[#C5A059] text-gray-400"
+                          title="Set discount"
+                          onClick={() => setDiscProduct(p)}
+                        >
+                          <Tag className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 text-gray-400"
+                          title="Edit product"
+                          onClick={() => {
+                            setEditing(p);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500"
+                          title="Delete product"
+                          onClick={() => handleDelete(p.id, p.title)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -1361,6 +1252,6 @@ const Products = () => {
       )}
     </div>
   );
-};;
+};
 
 export default Products;

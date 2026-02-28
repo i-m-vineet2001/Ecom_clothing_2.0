@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "4bf7f033-7ab5-4469-9432-f01dde380170",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "url": "http://localhost:8000/uploads/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e_a4b4e43e.png",
+    "alt": "tissueSilk2",
+    "sort_order": 0
+  },
+  {
+    "id": "d516d948-d65b-4201-9560-1f1027e1070d",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "url": "http://localhost:8000/uploads/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e_84bb2b24.png",
+    "alt": "tissuesilk3",
+    "sort_order": 1
+  },
+  {
+    "id": "50f0cf07-3f2f-4bcc-8576-ceea2cc4afc9",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "url": "http://localhost:8000/uploads/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e_8e4eb57d.png",
+    "alt": "tissuesilk4",
+    "sort_order": 2
+  },
+  {
+    "id": "bf58ae87-b97d-4d7a-ae86-ac2b57bda9c9",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "url": "http://localhost:8000/uploads/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e_ffc0203d.png",
+    "alt": "tissuSilk1",
+    "sort_order": 3
+  }
+]

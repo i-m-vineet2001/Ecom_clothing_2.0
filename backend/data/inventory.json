@@ -3,13 +3,13 @@
     "id": "inv-kurta-001",
     "product_id": "5bb19454-3f15-4b8b-8b33-902159e0da46",
     "variant": null,
-    "quantity": 0
+    "quantity": 10
   },
   {
     "id": "inv-banarsi-001",
     "product_id": "a1b2c3d4-e5f6-4a5b-9c9d-0e1f2a3b4c5d",
     "variant": null,
-    "quantity": 0
+    "quantity": 2
   },
   {
     "id": "inv-tissue-001",
@@ -27,12 +27,18 @@
     "id": "16444552-849f-4a4c-8571-8756dc674c7c",
     "product_id": "716bfc71-90d0-4eab-b89c-44460edbd98b",
     "variant": null,
-    "quantity": 0
+    "quantity": 6
   },
   {
     "id": "fca6312b-3400-41b6-937a-1e9ca2863f30",
     "product_id": "9145194b-2692-416c-b04e-87cd38e44ee6",
     "variant": null,
-    "quantity": 0
+    "quantity": 5
+  },
+  {
+    "id": "c928902c-8fb5-49ff-81d8-48d017f38d49",
+    "product_id": "46f61373-7a5e-40d2-8842-8b9e6d9fa04c",
+    "variant": null,
+    "quantity": 9
   }
 ]

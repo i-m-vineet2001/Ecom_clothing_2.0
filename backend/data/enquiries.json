@@ -30,5 +30,29 @@
     "message_preview": "Interested in Tissue silk",
     "source_url": "http://localhost:5174/product/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
     "created_at": "2026-02-27T09:47:55.160453+00:00"
+  },
+  {
+    "id": "5d67c7e2-8aaf-4e83-b308-44683ec7c6c8",
+    "product_id": "51cc55c7-32c3-4df8-bb2a-3f17c306dc19",
+    "e164_number": "+919876543210",
+    "message_preview": "Interested in Bandha Silk",
+    "source_url": "http://localhost:5176/catalog",
+    "created_at": "2026-02-28 03:07:36.584892+00:00"
+  },
+  {
+    "id": "b8b58af8-f328-4a0a-9526-b64b5e2f8c4f",
+    "product_id": "a1b2c3d4-e5f6-4a5b-9c9d-0e1f2a3b4c5d",
+    "e164_number": "+919876543210",
+    "message_preview": "Interested in Banarsi Silk",
+    "source_url": "http://localhost:5173/",
+    "created_at": "2026-02-28 03:19:11.695532+00:00"
+  },
+  {
+    "id": "109ae1f8-992c-48ef-aec8-9813daf30e09",
+    "product_id": "a1b2c3d4-e5f6-4a5b-9c9d-0e1f2a3b4c5d",
+    "e164_number": "+919876543210",
+    "message_preview": "Interested in Banarsi Silk",
+    "source_url": "http://localhost:5177/catalog",
+    "created_at": "2026-02-28 04:00:33.032359+00:00"
   }
 ]

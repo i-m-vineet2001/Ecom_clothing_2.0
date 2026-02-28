@@ -8,5 +8,55 @@
     "starts_at": "2026-02-01T00:00:00+00:00",
     "ends_at": "2026-03-31T23:59:59+00:00",
     "created_at": "2026-02-01T00:00:00+00:00"
+  },
+  {
+    "id": "a0a69a0a-8bff-4e2f-8a73-9509f4934a75",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "type": "percentage",
+    "value": 15.0,
+    "starts_at": "2026-02-28 08:40:00",
+    "ends_at": "2026-02-28 08:45:00",
+    "active": true,
+    "created_at": "2026-02-28 03:05:56.943491+00:00"
+  },
+  {
+    "id": "53012952-ec6c-401d-9303-afd00569462b",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "type": "percentage",
+    "value": 20.0,
+    "starts_at": "2026-02-28 09:06:00",
+    "ends_at": "2026-02-28 09:07:00",
+    "active": true,
+    "created_at": "2026-02-28 03:07:04.757249+00:00"
+  },
+  {
+    "id": "c7ebb8d2-bc71-4ec7-a6a0-9a089dedfe6b",
+    "product_id": "46f61373-7a5e-40d2-8842-8b9e6d9fa04c",
+    "type": "percentage",
+    "value": 10.0,
+    "starts_at": null,
+    "ends_at": null,
+    "active": false,
+    "created_at": "2026-02-28 03:34:29.662033+00:00"
+  },
+  {
+    "id": "55bd9b7b-80a5-4dcc-b3e4-48a4d43a9631",
+    "product_id": "b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "type": "percentage",
+    "value": 10.0,
+    "starts_at": null,
+    "ends_at": null,
+    "active": true,
+    "created_at": "2026-02-28 03:36:47.976609+00:00"
+  },
+  {
+    "id": "424ba798-02e2-4667-a1b4-cb47788d023b",
+    "product_id": "9145194b-2692-416c-b04e-87cd38e44ee6",
+    "type": "percentage",
+    "value": 50.0,
+    "starts_at": null,
+    "ends_at": null,
+    "active": true,
+    "created_at": "2026-02-28 04:03:41.961618+00:00"
   }
 ]
