@@ -65,7 +65,7 @@
 # WHATSAPP_FILE = DATA_DIR / "whatsapp.json"
 # ENQUIRIES_FILE = DATA_DIR / "enquiries.json"
 # AUDIT_FILE = DATA_DIR / "audit_logs.json"
-# FEEDBACK_FILE = DATA_DIR / "feedback.json"
+FEEDBACK_FILE = DATA_DIR / "feedback.json"
 
 
 # # ── Generic JSON helpers ──────────────────────────────
@@ -1018,16 +1018,16 @@
 # # ══════════════════════════════════════════════════════
 # # FEEDBACK
 # # ══════════════════════════════════════════════════════
-# @api_router.post("/feedback", response_model=Feedback)
-# async def submit_feedback(payload: FeedbackCreate):
-#     """Public — anyone can submit feedback."""
+@api_router.post("/feedback", response_model=Feedback)
+async def submit_feedback(payload: FeedbackCreate):
+    """Public — anyone can submit feedback."""
 #     fb = Feedback(**payload.model_dump())
 #     _insert(FEEDBACK_FILE, fb.model_dump())
 #     return fb
 
 
-# @api_router.get("/feedback", response_model=List[Feedback])
-# async def get_feedback(
+@api_router.get("/feedback", response_model=List[Feedback])
+async def get_feedback(
 #     skip: int = 0,
 #     limit: int = Query(default=100, le=500),
 #     current_user: User = Depends(require_role(["admin", "shopowner"])),
@@ -1037,23 +1037,23 @@
 #     return [Feedback(**f) for f in items[skip : skip + limit]]
 
 
-# @api_router.patch("/feedback/{feedback_id}/read")
-# async def mark_feedback_read(
-#     feedback_id: str,
+@api_router.patch("/feedback/{feedback_id}/read")
+async def mark_feedback_read(
+    feedback_id: str,
 #     current_user: User = Depends(require_role(["admin", "shopowner"])),
 # ):
-#     result = _update_one(FEEDBACK_FILE, {"id": feedback_id}, {"is_read": True})
+    result = _update_one(FEEDBACK_FILE, {"id": feedback_id}, {"is_read": True})
 #     if not result:
 #         raise HTTPException(404, "Feedback not found")
 #     return {"message": "Marked as read"}
 
 
-# @api_router.delete("/feedback/{feedback_id}")
-# async def delete_feedback(
-#     feedback_id: str,
+@api_router.delete("/feedback/{feedback_id}")
+async def delete_feedback(
+    feedback_id: str,
 #     current_user: User = Depends(require_role(["admin", "shopowner"])),
 # ):
-#     if not _delete_one(FEEDBACK_FILE, {"id": feedback_id}):
+    if not _delete_one(FEEDBACK_FILE, {"id": feedback_id}):
 #         raise HTTPException(404, "Feedback not found")
 #     return {"message": "Deleted"}
 
