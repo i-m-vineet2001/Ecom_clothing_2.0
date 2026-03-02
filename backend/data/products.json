@@ -110,5 +110,18 @@
     "created_by": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
     "created_at": "2026-03-01 13:36:20.992548+00:00",
     "updated_at": "2026-03-02T03:55:18.284333+00:00"
+  },
+  {
+    "id": "a92d21be-aa6e-4cb3-afed-0d031d61ee7c",
+    "title": "2d2",
+    "description": "wdd",
+    "base_price": 133.0,
+    "active": true,
+    "sku": "3333",
+    "category_id": null,
+    "default_whatsapp_number_id": null,
+    "created_by": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
+    "created_at": "2026-03-02 17:07:48.216753+00:00",
+    "updated_at": "2026-03-02 17:07:48.216758+00:00"
   }
 ]

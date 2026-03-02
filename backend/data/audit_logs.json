@@ -2224,5 +2224,27 @@
       "created_at": "2026-03-02 07:03:52.380947+00:00"
     },
     "timestamp": "2026-03-02 07:03:52.383149+00:00"
+  },
+  {
+    "id": "a2b7a035-fb4b-4057-8047-65c578896c0c",
+    "user_id": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
+    "action": "create",
+    "entity_type": "product",
+    "entity_id": "a92d21be-aa6e-4cb3-afed-0d031d61ee7c",
+    "before": null,
+    "after": {
+      "id": "a92d21be-aa6e-4cb3-afed-0d031d61ee7c",
+      "title": "2d2",
+      "description": "wdd",
+      "base_price": 133.0,
+      "active": true,
+      "sku": "3333",
+      "category_id": null,
+      "default_whatsapp_number_id": null,
+      "created_by": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
+      "created_at": "2026-03-02 17:07:48.216753+00:00",
+      "updated_at": "2026-03-02 17:07:48.216758+00:00"
+    },
+    "timestamp": "2026-03-02 17:07:48.219263+00:00"
   }
 ]

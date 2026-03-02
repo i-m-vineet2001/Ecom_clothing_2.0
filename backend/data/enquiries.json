@@ -118,5 +118,13 @@
     "message_preview": "Interested in Paatta Saree",
     "source_url": "http://localhost:5173/catalog",
     "created_at": "2026-03-02 03:48:05.003037+00:00"
+  },
+  {
+    "id": "e27841be-3530-4241-a646-6566d83a10c9",
+    "product_id": "a92d21be-aa6e-4cb3-afed-0d031d61ee7c",
+    "e164_number": "+917735813913",
+    "message_preview": "Interested in 2d2",
+    "source_url": "http://localhost:5173/",
+    "created_at": "2026-03-02 17:08:00.770962+00:00"
   }
 ]
