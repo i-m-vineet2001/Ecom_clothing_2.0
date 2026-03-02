@@ -5,7 +5,7 @@
 import axios from "axios";
 
 // Use Vite env variable (must start with VITE_ in .env file)
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = import.meta.env.VITE_API_URL || "https://ecom-clothing-2-0.onrender.com";
 
 // Base API path
 export const API = `${BACKEND_URL}/api`;
