@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -22,22 +21,16 @@ import {
   Plus,
   Edit,
   Trash2,
-  Upload,
-  X,
   Tag,
   Image as ImageIcon,
   Eye,
   EyeOff,
-  LayoutGrid,
-  List,
   Search,
-  Filter,
+  X,
 } from "lucide-react";
 import { formatPrice } from "../../lib/utils";
 import api from "../../lib/api";
 import { toast } from "sonner";
-
-// ── ImageUploader is shared component — imported from components/
 import ImageUploader from "../../components/ImageUploader";
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -82,7 +75,7 @@ const DiscountPanel = ({ product, onClose }) => {
       return;
     }
     if (form.type === "percentage" && v > 100) {
-      toast.error("Can't exceed 100%");
+      toast.error("Can’t exceed 100%");
       return;
     }
     setSaving(true);
@@ -129,6 +122,7 @@ const DiscountPanel = ({ product, onClose }) => {
           <p className="font-bold text-lg">{formatPrice(product.base_price)}</p>
         </div>
       </div>
+
       {activeDiscount && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
           <div>
@@ -139,7 +133,7 @@ const DiscountPanel = ({ product, onClose }) => {
               {activeDiscount.type === "percentage"
                 ? `${activeDiscount.value}% off`
                 : `₹${activeDiscount.value} off`}
-              {" → "}
+              {" \u2192 "}
               <strong>
                 {formatPrice(
                   activeDiscount.type === "percentage"
@@ -152,6 +146,7 @@ const DiscountPanel = ({ product, onClose }) => {
           <Tag className="w-5 h-5 text-green-500" />
         </div>
       )}
+
       <div className="bg-[#F9F8F5] rounded-xl p-4 space-y-4">
         <p className="text-xs font-bold text-[#2C2C2C] uppercase tracking-widest">
           New Discount
@@ -183,6 +178,7 @@ const DiscountPanel = ({ product, onClose }) => {
             />
           </div>
         </div>
+
         {previewPrice !== null && (
           <div className="flex items-center gap-3 bg-white border border-[#C5A059]/30 rounded-lg px-4 py-3">
             <span className="text-lg font-bold text-[#C5A059]">
@@ -199,6 +195,7 @@ const DiscountPanel = ({ product, onClose }) => {
             </span>
           </div>
         )}
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-xs text-gray-500 mb-1 block">
@@ -223,6 +220,7 @@ const DiscountPanel = ({ product, onClose }) => {
             />
           </div>
         </div>
+
         <label className="flex items-center gap-2.5 cursor-pointer">
           <input
             type="checkbox"
@@ -232,6 +230,7 @@ const DiscountPanel = ({ product, onClose }) => {
           />
           <span className="text-sm text-gray-700">Activate immediately</span>
         </label>
+
         <Button
           onClick={handleSave}
           disabled={saving || !form.value}
@@ -241,6 +240,7 @@ const DiscountPanel = ({ product, onClose }) => {
           {saving ? "Saving…" : "Save Discount"}
         </Button>
       </div>
+
       {discounts.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -302,6 +302,7 @@ const DiscountPanel = ({ product, onClose }) => {
           ))}
         </div>
       )}
+
       <div className="flex justify-end pt-3 border-t border-[#F2F0EB]">
         <Button variant="outline" onClick={onClose} className="text-sm px-6">
           Done
@@ -312,7 +313,7 @@ const DiscountPanel = ({ product, onClose }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ADD / EDIT PRODUCT FORM — full-featured slide-in panel
+// PRODUCT FORM
 // ══════════════════════════════════════════════════════════════════════════════
 const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
   const [form, setForm] = useState({
@@ -322,11 +323,14 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
     sku: "",
     category_id: "",
     active: true,
+    product_code: "",
+    saree_length: "",
+    blouse_length: "",
+    care_instruction: "",
   });
   const [saving, setSaving] = useState(false);
   const titleRef = useRef(null);
 
-  // Populate form when editing changes
   useEffect(() => {
     if (editing) {
       setForm({
@@ -355,12 +359,11 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
         care_instruction: "",
       });
     }
-    // Focus title after open
     setTimeout(() => titleRef.current?.focus(), 100);
   }, [editing, open]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!form.title.trim()) {
       toast.error("Title is required");
       return;
@@ -406,7 +409,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
         toast.success("Product updated!");
       } else {
         await api.post("/products", payload);
-        toast.success("Product created! Add images using the 🖼 button.");
+        toast.success("Product created! Add images using the image button.");
       }
       onSaved();
       onClose();
@@ -421,13 +424,10 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
-
-      {/* Slide-in panel from right */}
       <div className="relative ml-auto w-full max-w-xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-7 py-5 border-b border-[#F2F0EB] bg-[#F9F8F5] shrink-0">
@@ -449,10 +449,10 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
           </button>
         </div>
 
-        {/* Scrollable form body */}
+        {/* Form body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-7 py-6 space-y-6">
-            {/* Visibility toggle — prominent at top */}
+            {/* Visibility toggle */}
             <div
               className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
                 form.active
@@ -480,16 +480,11 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
                   </p>
                 </div>
               </div>
-              {/* Toggle switch */}
               <div
-                className={`w-12 h-6 rounded-full transition-all duration-300 relative ${
-                  form.active ? "bg-green-500" : "bg-gray-300"
-                }`}
+                className={`w-12 h-6 rounded-full transition-all duration-300 relative ${form.active ? "bg-green-500" : "bg-gray-300"}`}
               >
                 <div
-                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${
-                    form.active ? "left-6" : "left-0.5"
-                  }`}
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${form.active ? "left-6" : "left-0.5"}`}
                 />
               </div>
             </div>
@@ -539,7 +534,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
               </p>
             </div>
 
-            {/* Price + SKU side by side */}
+            {/* Price + SKU */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label
@@ -622,14 +617,9 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
                   </option>
                 ))}
               </select>
-              {!form.category_id && (
-                <p className="text-xs text-gray-400 mt-1">
-                  Optional — helps customers browse
-                </p>
-              )}
             </div>
 
-            {/* ── Product Detail Fields ───────────────── */}
+            {/* Product Detail Fields */}
             <div className="border-t border-[#F2F0EB] pt-5">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
                 Product Details{" "}
@@ -712,7 +702,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
               </div>
             </div>
 
-            {/* Price preview card */}
+            {/* Preview card */}
             {form.base_price && parseFloat(form.base_price) > 0 && (
               <div className="bg-[#F9F8F5] border border-[#F2F0EB] rounded-xl p-4">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
@@ -740,9 +730,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
                       {formatPrice(parseFloat(form.base_price))}
                     </p>
                     <span
-                      className={`inline-flex items-center gap-1 text-xs mt-1 font-semibold ${
-                        form.active ? "text-green-600" : "text-gray-400"
-                      }`}
+                      className={`inline-flex items-center gap-1 text-xs mt-1 font-semibold ${form.active ? "text-green-600" : "text-gray-400"}`}
                     >
                       {form.active ? (
                         <Eye className="w-3 h-3" />
@@ -758,7 +746,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
           </div>
         </form>
 
-        {/* Footer actions — always visible */}
+        {/* Footer */}
         <div className="px-7 py-5 border-t border-[#F2F0EB] bg-white shrink-0 flex gap-3">
           <Button
             type="button"
@@ -771,7 +759,7 @@ const ProductForm = ({ open, onClose, editing, categories, onSaved }) => {
           <Button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex-2 flex-1 bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors font-semibold"
+            className="flex-1 bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors font-semibold"
             data-testid="save-product-button"
           >
             {saving ? (
@@ -798,13 +786,44 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [toggling, setToggling] = useState(null); // product id being toggled
+  const [toggling, setToggling] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [imgProduct, setImgProduct] = useState(null);
   const [discProduct, setDiscProduct] = useState(null);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilter] = useState("all"); // all | active | hidden
+  const [filterStatus, setFilter] = useState("all");
+  const [stockEditing, setStockEditing] = useState(null); // product id
+  const [stockVal, setStockVal] = useState("");
+
+  const startStockEdit = (p) => {
+    setStockEditing(p.id);
+    setStockVal(String(p.inventory?.quantity ?? 0));
+  };
+
+  const saveStock = async (productId) => {
+    const qty = parseInt(stockVal, 10);
+    if (isNaN(qty) || qty < 0) {
+      toast.error("Enter a valid quantity");
+      return;
+    }
+    try {
+      await api.put(`/products/${productId}/inventory`, { quantity: qty });
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? { ...p, inventory: { ...(p.inventory || {}), quantity: qty } }
+            : p,
+        ),
+      );
+      toast.success("Stock updated");
+    } catch {
+      toast.error("Failed to update stock");
+    } finally {
+      setStockEditing(null);
+      setStockVal("");
+    }
+  };
 
   useEffect(() => {
     fetchAll();
@@ -812,9 +831,8 @@ const Products = () => {
 
   const fetchAll = async () => {
     try {
-      // include_inactive=true so dashboard shows ALL products including hidden
       const [pRes, cRes] = await Promise.all([
-        api.get("/products?limit=1000&include_inactive=true"),
+        api.get("/products?limit=500&include_inactive=true"),
         api.get("/categories"),
       ]);
       setProducts(pRes.data);
@@ -826,12 +844,10 @@ const Products = () => {
     }
   };
 
-  // Quick toggle visibility without opening form
   const toggleVisibility = async (product) => {
     setToggling(product.id);
     try {
       await api.put(`/products/${product.id}`, { active: !product.active });
-      // Optimistic update
       setProducts((prev) =>
         prev.map((p) =>
           p.id === product.id ? { ...p, active: !p.active } : p,
@@ -839,8 +855,8 @@ const Products = () => {
       );
       toast.success(
         product.active
-          ? `"${product.title}" hidden from store`
-          : `"${product.title}" is now visible`,
+          ? `"${product.title}" hidden`
+          : `"${product.title}" now visible`,
       );
     } catch {
       toast.error("Failed to update visibility");
@@ -865,7 +881,6 @@ const Products = () => {
     }
   };
 
-  // Filtered list
   const filtered = products.filter((p) => {
     const matchSearch =
       !search ||
@@ -885,7 +900,7 @@ const Products = () => {
 
   return (
     <div className="p-8" data-testid="products-page">
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-heading text-4xl font-semibold text-[#2C2C2C]">
@@ -907,7 +922,7 @@ const Products = () => {
         </Button>
       </div>
 
-      {/* ── Filter + Search bar ──────────────────────────────── */}
+      {/* Search + filters */}
       <div className="flex gap-3 mb-5">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -940,7 +955,7 @@ const Products = () => {
         </div>
       </div>
 
-      {/* ── Product Form panel ───────────────────────────────── */}
+      {/* Product Form */}
       <ProductForm
         open={formOpen}
         onClose={() => {
@@ -952,7 +967,7 @@ const Products = () => {
         onSaved={fetchAll}
       />
 
-      {/* ── Images dialog ────────────────────────────────────── */}
+      {/* Images Dialog */}
       <Dialog
         open={!!imgProduct}
         onOpenChange={(o) => {
@@ -981,7 +996,6 @@ const Products = () => {
                 currentImages={imgProduct.images || []}
                 onDeleteUrl={`/products/${imgProduct.id}/images`}
                 onChanged={() => {
-                  // Refresh images for this product
                   api.get(`/products/${imgProduct.id}`).then((res) => {
                     setImgProduct(res.data);
                     setProducts((prev) =>
@@ -1006,7 +1020,7 @@ const Products = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Discount dialog ──────────────────────────────────── */}
+      {/* Discount Dialog */}
       <Dialog
         open={!!discProduct}
         onOpenChange={(o) => {
@@ -1034,7 +1048,7 @@ const Products = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Table ───────────────────────────────────────────── */}
+      {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
           <div className="w-8 h-8 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
@@ -1042,11 +1056,7 @@ const Products = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-24 bg-white border border-[#F2F0EB] rounded-xl">
           <div className="w-16 h-16 bg-[#F2F0EB] rounded-full flex items-center justify-center mx-auto mb-4">
-            {search ? (
-              <Search className="w-7 h-7 text-gray-300" />
-            ) : (
-              <ImageIcon className="w-7 h-7 text-gray-300" />
-            )}
+            <ImageIcon className="w-7 h-7 text-gray-300" />
           </div>
           <p className="text-gray-500 font-medium mb-1">
             {search ? `No products matching "${search}"` : "No products yet"}
@@ -1100,7 +1110,7 @@ const Products = () => {
                     <TableCell className="pl-5">
                       <div
                         onClick={() => setImgProduct(p)}
-                        title="Click to manage images"
+                        title="Manage images"
                         className="relative w-12 h-12 bg-[#F2F0EB] rounded-lg overflow-hidden cursor-pointer group ring-2 ring-transparent hover:ring-[#C5A059] transition-all"
                       >
                         {cover ? (
@@ -1156,19 +1166,44 @@ const Products = () => {
                     </TableCell>
 
                     <TableCell className="text-gray-600">
-                      {p.inventory?.quantity ?? 0}
+                      {stockEditing === p.id ? (
+                        <input
+                          type="number"
+                          min="0"
+                          value={stockVal}
+                          onChange={(e) => setStockVal(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveStock(p.id);
+                            if (e.key === "Escape") {
+                              setStockEditing(null);
+                            }
+                          }}
+                          onBlur={() => saveStock(p.id)}
+                          autoFocus
+                          className="w-16 text-center text-sm border border-[#C5A059] rounded px-1 py-0.5 focus:outline-none"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => startStockEdit(p)}
+                          title="Click to edit stock"
+                          className={`font-semibold hover:text-[#C5A059] transition-colors cursor-pointer ${
+                            (p.inventory?.quantity ?? 0) === 0
+                              ? "text-red-500"
+                              : (p.inventory?.quantity ?? 0) <= 5
+                                ? "text-amber-500"
+                                : "text-gray-700"
+                          }`}
+                        >
+                          {p.inventory?.quantity ?? 0}
+                        </button>
+                      )}
                     </TableCell>
 
-                    {/* Visibility toggle */}
                     <TableCell>
                       <button
                         onClick={() => toggleVisibility(p)}
                         disabled={isToggling}
-                        title={
-                          p.active
-                            ? "Click to hide from store"
-                            : "Click to show on store"
-                        }
+                        title={p.active ? "Click to hide" : "Click to show"}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all hover:scale-105 active:scale-95 ${
                           isToggling
                             ? "opacity-50 cursor-wait"
@@ -1188,7 +1223,6 @@ const Products = () => {
                       </button>
                     </TableCell>
 
-                    {/* Actions */}
                     <TableCell>
                       <div className="flex items-center justify-end gap-1 pr-2">
                         <Button

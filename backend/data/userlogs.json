@@ -1,13 +1,5 @@
 [
   {
-    "id": "2c9591b8-0b3f-4ce6-9835-45913331468d",
-    "name": "vineet",
-    "email": "vineet@gmail.com",
-    "role": "shopowner",
-    "password_hash": "$2b$12$4Nv8qQqPMhvTnb95aBIYKe1u8WGaiLHSWo07KK4LSQlu62YEItFxm",
-    "created_at": "2026-02-27 05:13:31.196568+00:00"
-  },
-  {
     "id": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
     "name": "vineet patel",
     "email": "patelvineet71@gmail.com",
@@ -35,8 +27,24 @@
     "id": "e440b6b5-6148-499b-b74e-91a67f9ec4c2",
     "name": "ayushi pagal dutta",
     "email": "ayushi@gmail.com",
-    "role": "admin",
+    "role": "viewer",
     "password_hash": "$2b$12$/TrT5eumm/HauMVOT7ixL.kVp4VmCRM/anXi2RwgVSKEHbhCtW1VG",
     "created_at": "2026-02-28 03:17:56.201220+00:00"
+  },
+  {
+    "id": "587866d4-b304-4271-a5c4-058a631de004",
+    "name": "Sophia Meher",
+    "email": "sophia@gmail.com",
+    "role": "shopowner",
+    "password_hash": "$2b$12$bhsSiux/jZcXBkL5X.U7beq2cZqBKSSDO1py7S4BY4Q9slhey851y",
+    "created_at": "2026-03-01 13:45:47.342212+00:00"
+  },
+  {
+    "id": "218edc35-9a18-4095-8228-63324cb8a2a0",
+    "name": "test1",
+    "email": "test1@gmail.com",
+    "role": "viewer",
+    "password_hash": "$2b$12$9gdjVmfzsFTa4klK/fKS8u43Zh5kn1Jsm1ZZEN6p09W3y4sbbQVfK",
+    "created_at": "2026-03-02 03:47:55.070407+00:00"
   }
 ]

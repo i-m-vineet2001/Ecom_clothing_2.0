@@ -22,7 +22,7 @@
     "name": "Cotton Sarees",
     "slug": "cotton-sarees",
     "description": "Lightweight and breathable cotton sarees for daily wear.",
-    "image_url": null,
+    "image_url": "http://localhost:8000/uploads/cat_cat-003_e361cfcf.png",
     "parent_id": null,
     "created_at": "2026-02-27T10:00:00+00:00"
   },
@@ -52,5 +52,14 @@
     "slug": "sambalpuri-saree",
     "parent_id": null,
     "created_at": "2026-02-28 03:33:47.314137+00:00"
+  },
+  {
+    "id": "5b7fdd98-9598-4b3d-8fd9-b371c9bcc244",
+    "name": "KIds dress",
+    "description": "Paschim Odisha Designs",
+    "image_url": "",
+    "slug": "kids-dress",
+    "parent_id": null,
+    "created_at": "2026-03-01 13:39:46.658798+00:00"
   }
 ]

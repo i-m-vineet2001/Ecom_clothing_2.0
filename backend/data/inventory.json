@@ -40,5 +40,11 @@
     "product_id": "46f61373-7a5e-40d2-8842-8b9e6d9fa04c",
     "variant": null,
     "quantity": 9
+  },
+  {
+    "id": "5f8beee4-2aa4-427f-8ab7-3ecf5ccb8383",
+    "product_id": "9d10c68c-443d-4525-bba8-7f69df129254",
+    "variant": null,
+    "quantity": 16
   }
 ]

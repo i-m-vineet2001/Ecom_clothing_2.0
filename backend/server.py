@@ -65,6 +65,7 @@ IMAGES_FILE = DATA_DIR / "images.json"
 WHATSAPP_FILE = DATA_DIR / "whatsapp.json"
 ENQUIRIES_FILE = DATA_DIR / "enquiries.json"
 AUDIT_FILE = DATA_DIR / "audit_logs.json"
+FEEDBACK_FILE = DATA_DIR / "feedback.json"
 
 
 # ── Generic JSON helpers ──────────────────────────────
@@ -285,6 +286,26 @@ class WhatsappNumberUpdate(BaseModel):
     product_id: Optional[str] = None
 
 
+class Feedback(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: Optional[str] = ""
+    rating: int = 5
+    message: str
+    page_url: Optional[str] = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    is_read: bool = False
+
+
+class FeedbackCreate(BaseModel):
+    name: str
+    email: Optional[str] = ""
+    rating: int = 5
+    message: str
+    page_url: Optional[str] = ""
+
+
 class ProductImage(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -351,11 +372,10 @@ class Product(BaseModel):
     sku: str
     category_id: Optional[str] = None
     default_whatsapp_number_id: Optional[str] = None
-    # ── Extra product detail fields ──────────────────────
-    product_code: Optional[str] = None  # e.g. "Ladki Bahin"
-    saree_length: Optional[str] = None  # e.g. "6.2 Meters"
-    blouse_length: Optional[str] = None  # e.g. "0.80 Meters"
-    care_instruction: Optional[str] = None  # e.g. "Dry clean only"
+    product_code: Optional[str] = None
+    saree_length: Optional[str] = None
+    blouse_length: Optional[str] = None
+    care_instruction: Optional[str] = None
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -677,24 +697,21 @@ async def upload_category_image(
     contents = await file.read()
     if len(contents) > MAX_IMAGE_BYTES:
         raise HTTPException(400, "File too large (max 10MB)")
-    old_url = doc.get("image_url", "")
-    if old_url and "/uploads/" in old_url:
-        old_path = UPLOADS_DIR / old_url.split("/uploads/")[-1]
-        if old_path.exists():
-            old_path.unlink()
     ext = Path(file.filename or "img.jpg").suffix.lower() or ".jpg"
     filename = f"cat_{category_id}_{uuid.uuid4().hex[:8]}{ext}"
     (UPLOADS_DIR / filename).write_bytes(contents)
     base_url = os.environ.get("BASE_URL", "http://localhost:8000")
-    url = f"{base_url}/uploads/{filename}"
-    updated = _update_one(CATEGORIES_FILE, {"id": category_id}, {"image_url": url})
+    image_url = f"{base_url}/uploads/{filename}"
+    updated = _update_one(
+        CATEGORIES_FILE, {"id": category_id}, {"image_url": image_url}
+    )
     log_audit(
         current_user.id,
         "update",
         "category",
         category_id,
         before=doc,
-        after={"image_url": url},
+        after={"image_url": image_url},
     )
     return CategoryResponse(**updated)
 
@@ -710,7 +727,7 @@ async def get_products(
     max_price: Optional[float] = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
-    limit: int = Query(default=50, le=10000),
+    limit: int = Query(default=50, le=500),
     skip: int = 0,
     include_inactive: bool = False,
 ):
@@ -982,6 +999,65 @@ async def delete_discount(
 
 
 # ══════════════════════════════════════════════════════
+# WHATSAPP - PUBLIC DEFAULT
+# ══════════════════════════════════════════════════════
+@api_router.get("/whatsapp-default", response_model=Optional[WhatsappNumber])
+async def get_default_whatsapp_number():
+    """Public — returns the default store WhatsApp number."""
+    wa = next(
+        (
+            w
+            for w in _read(WHATSAPP_FILE)
+            if w.get("is_default") and w.get("owner_scope") == "store"
+        ),
+        None,
+    )
+    return WhatsappNumber(**wa) if wa else None
+
+
+# ══════════════════════════════════════════════════════
+# FEEDBACK
+# ══════════════════════════════════════════════════════
+@api_router.post("/feedback", response_model=Feedback)
+async def submit_feedback(payload: FeedbackCreate):
+    """Public — anyone can submit feedback."""
+    fb = Feedback(**payload.model_dump())
+    _insert(FEEDBACK_FILE, fb.model_dump())
+    return fb
+
+
+@api_router.get("/feedback", response_model=List[Feedback])
+async def get_feedback(
+    skip: int = 0,
+    limit: int = Query(default=100, le=500),
+    current_user: User = Depends(require_role(["admin", "shopowner"])),
+):
+    items = _read(FEEDBACK_FILE)
+    items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return [Feedback(**f) for f in items[skip : skip + limit]]
+
+
+@api_router.patch("/feedback/{feedback_id}/read")
+async def mark_feedback_read(
+    feedback_id: str,
+    current_user: User = Depends(require_role(["admin", "shopowner"])),
+):
+    result = _update_one(FEEDBACK_FILE, {"id": feedback_id}, {"is_read": True})
+    if not result:
+        raise HTTPException(404, "Feedback not found")
+    return {"message": "Marked as read"}
+
+
+@api_router.delete("/feedback/{feedback_id}")
+async def delete_feedback(
+    feedback_id: str,
+    current_user: User = Depends(require_role(["admin", "shopowner"])),
+):
+    if not _delete_one(FEEDBACK_FILE, {"id": feedback_id}):
+        raise HTTPException(404, "Feedback not found")
+    return {"message": "Deleted"}
+
+
 # WHATSAPP
 # ══════════════════════════════════════════════════════
 @api_router.get("/whatsapp-numbers", response_model=List[WhatsappNumber])

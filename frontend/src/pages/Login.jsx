@@ -165,31 +165,20 @@
 //                 </Link>
 //               </p>
 
-//               {/* Demo credentials */}
+//               {/* Role hint */}
 //               <div className="mt-6 p-4 bg-[#F9F8F5] border border-[#F2F0EB] rounded-md">
 //                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">
-//                   Demo Credentials
+//                   Access Roles
 //                 </p>
-//                 <button
-//                   type="button"
-//                   onClick={() => {
-//                     setEmail("admin@gmbastralaya.com");
-//                     setPassword("admin123");
-//                   }}
-//                   className="w-full text-left text-xs text-gray-600 hover:text-[#C5A059] py-1 transition-colors"
-//                 >
-//                   👤 Admin: admin@gmbastralaya.com / admin123
-//                 </button>
-//                 <button
-//                   type="button"
-//                   onClick={() => {
-//                     setEmail("shop@gmbastralaya.com");
-//                     setPassword("shop123");
-//                   }}
-//                   className="w-full text-left text-xs text-gray-600 hover:text-[#C5A059] py-1 transition-colors"
-//                 >
-//                   🏪 Shopowner: shop@gmbastralaya.com / shop123
-//                 </button>
+//                 <p className="text-xs text-gray-500 leading-5">
+//                   🔑 <strong>Admin / Shopowner</strong> — full dashboard access
+//                   <br />
+//                   👁 <strong>Viewer</strong> — browse store only
+//                   <br />
+//                   <span className="text-gray-400">
+//                     Contact your admin to change your role.
+//                   </span>
+//                 </p>
 //               </div>
 //             </CardContent>
 //           </Card>
@@ -211,7 +200,7 @@
 // export default Login;
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -231,6 +220,11 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Where to go back after login
+  const from = location.state?.from || "/";
+  const enquireProductId = location.state?.enquireProductId || null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -241,7 +235,11 @@ const Login = () => {
       if (user.role === "admin" || user.role === "shopowner") {
         navigate("/dashboard");
       } else {
-        navigate("/");
+        // Return to previous page and auto-trigger enquiry if applicable
+        navigate(from, {
+          replace: true,
+          state: { autoEnquire: enquireProductId },
+        });
       }
     } catch (error) {
       toast.error(
@@ -299,7 +297,16 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* NOTE: Using name + autocomplete to fix browser autofill warning */}
+              {/* Banner shown when redirected from enquiry */}
+              {enquireProductId && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
+                  <span>🔒</span>
+                  <span>
+                    Please sign in to enquire about this product on WhatsApp
+                  </span>
+                </div>
+              )}
+
               <form
                 onSubmit={handleSubmit}
                 className="space-y-5"
@@ -366,11 +373,12 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Link to signup */}
+              {/* Link to signup — passes redirect state forward */}
               <p className="text-center text-sm text-gray-500">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
+                  state={{ from, enquireProductId }}
                   className="text-[#C5A059] hover:underline font-medium"
                 >
                   Create one

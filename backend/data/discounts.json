@@ -46,7 +46,7 @@
     "value": 10.0,
     "starts_at": null,
     "ends_at": null,
-    "active": true,
+    "active": false,
     "created_at": "2026-02-28 03:36:47.976609+00:00"
   },
   {
@@ -58,5 +58,15 @@
     "ends_at": null,
     "active": true,
     "created_at": "2026-02-28 04:03:41.961618+00:00"
+  },
+  {
+    "id": "d29aa6c6-91c8-451d-94f8-33ceb853d684",
+    "product_id": "9d10c68c-443d-4525-bba8-7f69df129254",
+    "type": "percentage",
+    "value": 20.0,
+    "starts_at": null,
+    "ends_at": null,
+    "active": true,
+    "created_at": "2026-03-01 13:37:44.614579+00:00"
   }
 ]

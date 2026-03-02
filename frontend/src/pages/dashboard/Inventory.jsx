@@ -1,336 +1,349 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import { Warehouse, Save, Search, AlertTriangle, Package } from "lucide-react";
+  Package,
+  Search,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Edit2,
+  Save,
+  X,
+} from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
-import { formatPrice } from "../../lib/utils";
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState({}); // { [product_id]: true }
-  const [edits, setEdits] = useState({}); // { [product_id]: quantity_string }
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all"); // all | low | out
+  const [filter, setFilter] = useState("all"); // all | instock | low | outofstock
+  const [editingId, setEditingId] = useState(null);
+  const [editQty, setEditQty] = useState("");
+  const inputRef = useRef(null);
 
   useEffect(() => {
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    if (editingId && inputRef.current) inputRef.current.focus();
+  }, [editingId]);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
       const res = await api.get("/products?limit=500&include_inactive=true");
       setProducts(res.data);
-      // Pre-fill edits with current quantities
-      const initial = {};
-      res.data.forEach((p) => {
-        initial[p.id] = String(p.inventory?.quantity ?? 0);
-      });
-      setEdits(initial);
     } catch {
-      toast.error("Failed to load products");
+      toast.error("Failed to load inventory");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (product) => {
-    const qty = parseInt(edits[product.id]);
+  const startEdit = (p) => {
+    setEditingId(p.id);
+    setEditQty(String(p.inventory?.quantity ?? 0));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditQty("");
+  };
+
+  const saveQty = async (productId) => {
+    const qty = parseInt(editQty, 10);
     if (isNaN(qty) || qty < 0) {
       toast.error("Enter a valid quantity (0 or more)");
       return;
     }
-    setSaving((s) => ({ ...s, [product.id]: true }));
     try {
-      await api.put(`/products/${product.id}/inventory`, { quantity: qty });
-      // Update local state optimistically
+      await api.put(`/products/${productId}/inventory`, { quantity: qty });
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === product.id
-            ? { ...p, inventory: { ...p.inventory, quantity: qty } }
+          p.id === productId
+            ? { ...p, inventory: { ...(p.inventory || {}), quantity: qty } }
             : p,
         ),
       );
-      toast.success(`Stock updated: ${product.title} → ${qty} units`);
-    } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to update stock");
-    } finally {
-      setSaving((s) => ({ ...s, [product.id]: false }));
+      toast.success("Stock updated");
+      cancelEdit();
+    } catch {
+      toast.error("Failed to update");
     }
   };
 
-  const handleKeyDown = (e, product) => {
-    if (e.key === "Enter") handleSave(product);
+  const stockStatus = (qty) => {
+    if (qty === 0) return "outofstock";
+    if (qty <= 5) return "low";
+    return "instock";
   };
 
-  const hasChanged = (p) =>
-    parseInt(edits[p.id]) !== (p.inventory?.quantity ?? 0);
-
   // Filter + search
-  const filtered = products.filter((p) => {
+  const visible = products.filter((p) => {
     const qty = p.inventory?.quantity ?? 0;
     const matchSearch =
       !search ||
       p.title?.toLowerCase().includes(search.toLowerCase()) ||
       p.sku?.toLowerCase().includes(search.toLowerCase());
-    const matchFilter =
-      filter === "all"
-        ? true
-        : filter === "low"
-          ? qty > 0 && qty <= 5
-          : filter === "out"
-            ? qty === 0
-            : true;
+    const matchFilter = filter === "all" || stockStatus(qty) === filter;
     return matchSearch && matchFilter;
   });
 
-  const totalStock = products.reduce(
-    (sum, p) => sum + (p.inventory?.quantity ?? 0),
-    0,
-  );
-  const outOfStock = products.filter(
-    (p) => (p.inventory?.quantity ?? 0) === 0,
+  // Stats
+  const inStock = products.filter(
+    (p) => (p.inventory?.quantity ?? 0) > 5,
   ).length;
-  const lowStock = products.filter((p) => {
+  const low = products.filter((p) => {
     const q = p.inventory?.quantity ?? 0;
     return q > 0 && q <= 5;
   }).length;
+  const outStock = products.filter(
+    (p) => (p.inventory?.quantity ?? 0) === 0,
+  ).length;
+
+  const FILTERS = [
+    { key: "all", label: "All", count: products.length },
+    { key: "instock", label: "In Stock", count: inStock },
+    { key: "low", label: "Low Stock", count: low },
+    { key: "outofstock", label: "Out of Stock", count: outStock },
+  ];
 
   return (
-    <div className="p-8" data-testid="inventory-page">
+    <div className="p-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-heading text-4xl font-semibold text-[#2C2C2C]">
-            Inventory
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            {totalStock} units in stock across {products.length} products
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="font-heading text-2xl font-semibold text-[#2C2C2C]">
+          Inventory
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">
+          Manage stock quantities across all products
+        </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
         {[
           {
-            key: "all",
-            label: "Total Products",
-            val: products.length,
-            border: "border-l-gray-300",
-            text: "text-[#2C2C2C]",
+            label: "In Stock",
+            value: inStock,
+            icon: CheckCircle,
+            color: "text-green-500",
+            bg: "bg-green-50",
           },
           {
-            key: "low",
-            label: "Low Stock (≤ 5)",
-            val: lowStock,
-            border: "border-l-amber-400",
-            text: "text-amber-600",
+            label: "Low Stock",
+            value: low,
+            icon: AlertTriangle,
+            color: "text-amber-500",
+            bg: "bg-amber-50",
           },
           {
-            key: "out",
             label: "Out of Stock",
-            val: outOfStock,
-            border: "border-l-red-400",
-            text: "text-red-600",
+            value: outStock,
+            icon: XCircle,
+            color: "text-red-500",
+            bg: "bg-red-50",
           },
-        ].map(({ key, label, val, border, text }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`bg-white border border-[#F2F0EB] border-l-4 ${border} rounded-xl p-4 text-left transition-all hover:shadow-sm ${
-              filter === key ? "ring-2 ring-[#C5A059]/30 shadow-sm" : ""
-            }`}
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <div
+            key={label}
+            className={`${bg} border border-opacity-20 rounded-lg px-5 py-4 flex items-center gap-4`}
           >
-            <p className={`text-3xl font-bold ${text}`}>{val}</p>
-            <p className="text-xs text-gray-500 mt-1">{label}</p>
-          </button>
+            <Icon className={`w-6 h-6 ${color} shrink-0`} />
+            <div>
+              <p className="text-2xl font-bold text-[#2C2C2C]">{value}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative mb-5">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by product name or SKU…"
-          className="pl-9 bg-white border-[#E8E5E0] focus:border-[#C5A059]"
-        />
+      {/* Search + filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or SKU…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E8E5E0] rounded bg-white focus:outline-none focus:border-[#C5A059]"
+          />
+        </div>
+        <div className="flex gap-2">
+          {FILTERS.map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-all ${
+                filter === key
+                  ? "bg-[#2C2C2C] text-white border-[#2C2C2C]"
+                  : "bg-white text-gray-500 border-[#E8E5E0] hover:border-[#C5A059] hover:text-[#C5A059]"
+              }`}
+            >
+              {label} <span className="opacity-60 ml-0.5">({count})</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-24">
-          <div className="w-8 h-8 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center justify-center py-20">
+          <div className="w-7 h-7 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 bg-white border border-[#F2F0EB] rounded-xl">
-          <Warehouse className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500">
-            No products found{search ? ` for "${search}"` : ""}
-          </p>
+      ) : visible.length === 0 ? (
+        <div className="text-center py-20 border border-[#F2F0EB] rounded-lg">
+          <Package className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No products found</p>
         </div>
       ) : (
-        <div className="bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-[#F9F8F5] hover:bg-[#F9F8F5]">
-                <TableHead className="pl-5 w-16">Photo</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-44">Stock Quantity</TableHead>
-                <TableHead className="w-24 pr-5 text-right">Save</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => {
+        <div className="border border-[#F2F0EB] rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#F9F8F5] border-b border-[#F2F0EB]">
+                <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Product
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  SKU
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Status
+                </th>
+                <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Stock
+                </th>
+                <th className="text-right px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F2F0EB]">
+              {visible.map((p) => {
                 const qty = p.inventory?.quantity ?? 0;
-                const editQty = parseInt(edits[p.id] ?? "0");
-                const changed = hasChanged(p);
-                const isSaving = saving[p.id];
-
-                const stockStatus =
-                  qty === 0
-                    ? { label: "Out of Stock", cls: "bg-red-100 text-red-700" }
-                    : qty <= 5
-                      ? {
-                          label: "Low Stock",
-                          cls: "bg-amber-100 text-amber-700",
-                        }
-                      : {
-                          label: "In Stock",
-                          cls: "bg-green-100 text-green-700",
-                        };
-
+                const status = stockStatus(qty);
+                const isEdit = editingId === p.id;
                 const cover = p.images?.[0]?.url;
 
                 return (
-                  <TableRow
+                  <tr
                     key={p.id}
-                    className={`hover:bg-[#F9F8F5]/60 transition-colors ${!p.active ? "opacity-55" : ""}`}
+                    className={`hover:bg-[#FDFCFA] transition-colors ${!p.active ? "opacity-50" : ""}`}
                   >
-                    {/* Thumb */}
-                    <TableCell className="pl-5">
-                      <div className="w-12 h-12 bg-[#F2F0EB] rounded-lg overflow-hidden">
-                        {cover ? (
-                          <img
-                            src={cover}
-                            alt={p.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-5 h-5 text-gray-300" />
-                          </div>
-                        )}
+                    {/* Product */}
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded bg-[#F2F0EB] overflow-hidden shrink-0">
+                          {cover ? (
+                            <img
+                              src={cover}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-4 h-4 text-gray-300 m-auto mt-2.5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[#2C2C2C] leading-snug line-clamp-1">
+                            {p.title}
+                          </p>
+                          {!p.active && (
+                            <span className="text-[10px] text-gray-400">
+                              Hidden
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
+                    </td>
 
-                    {/* Product info */}
-                    <TableCell>
-                      <p className="font-medium text-[#2C2C2C]">{p.title}</p>
-                      {!p.active && (
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">
-                          Hidden
-                        </p>
-                      )}
-                    </TableCell>
-
-                    <TableCell className="font-mono text-sm text-gray-400">
+                    {/* SKU */}
+                    <td className="px-4 py-3 text-gray-400 text-xs font-mono">
                       {p.sku}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatPrice(p.base_price)}
-                    </TableCell>
+                    </td>
 
-                    {/* Stock status badge */}
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        {qty === 0 && (
-                          <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-                        )}
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full ${stockStatus.cls}`}
-                        >
-                          {stockStatus.label}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    {/* Editable stock input */}
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={edits[p.id] ?? qty}
-                          onChange={(e) =>
-                            setEdits((prev) => ({
-                              ...prev,
-                              [p.id]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) => handleKeyDown(e, p)}
-                          className={`w-24 text-center font-mono transition-all ${
-                            changed
-                              ? "border-[#C5A059] ring-1 ring-[#C5A059]/30 bg-[#FDFAF5]"
-                              : "bg-white"
-                          }`}
-                        />
-                        <span className="text-xs text-gray-400">units</span>
-                      </div>
-                    </TableCell>
-
-                    {/* Save button */}
-                    <TableCell className="pr-5 text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSave(p)}
-                        disabled={!changed || isSaving}
-                        className={`h-8 transition-all ${
-                          changed
-                            ? "bg-[#2C2C2C] text-white hover:bg-[#C5A059]"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    {/* Status badge */}
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                          status === "instock"
+                            ? "bg-green-50 text-green-700"
+                            : status === "low"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-red-50 text-red-600"
                         }`}
                       >
-                        {isSaving ? (
-                          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Save className="w-3.5 h-3.5" />
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                        {status === "instock"
+                          ? "In Stock"
+                          : status === "low"
+                            ? "Low"
+                            : "Out of Stock"}
+                      </span>
+                    </td>
+
+                    {/* Stock qty — editable inline */}
+                    <td className="px-4 py-3 text-center">
+                      {isEdit ? (
+                        <input
+                          ref={inputRef}
+                          type="number"
+                          min="0"
+                          value={editQty}
+                          onChange={(e) => setEditQty(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveQty(p.id);
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                          className="w-20 text-center text-sm border border-[#C5A059] rounded px-2 py-1 focus:outline-none"
+                        />
+                      ) : (
+                        <span
+                          className={`text-base font-bold ${
+                            status === "instock"
+                              ? "text-[#2C2C2C]"
+                              : status === "low"
+                                ? "text-amber-600"
+                                : "text-red-500"
+                          }`}
+                        >
+                          {qty}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Action */}
+                    <td className="px-5 py-3 text-right">
+                      {isEdit ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => saveQty(p.id)}
+                            className="flex items-center gap-1 text-xs font-bold text-white bg-[#2C2C2C] hover:bg-[#C5A059] px-3 py-1.5 rounded transition-colors"
+                          >
+                            <Save className="w-3 h-3" /> Save
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="p-1.5 text-gray-400 hover:text-gray-700 rounded border border-[#E8E5E0] transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => startEdit(p)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-[#C5A059] transition-colors ml-auto"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" /> Edit
+                        </button>
+                      )}
+                    </td>
+                  </tr>
                 );
               })}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between px-5 py-3 border-t border-[#F2F0EB] bg-[#F9F8F5]">
-            <p className="text-xs text-gray-400">
-              {filtered.length} product{filtered.length !== 1 ? "s" : ""}
-            </p>
-            <p className="text-xs text-gray-400">
-              Edit quantity and press{" "}
-              <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-mono">
-                Enter
-              </kbd>{" "}
-              or click <Save className="inline w-3 h-3 mx-0.5" /> to save
-            </p>
-          </div>
+            </tbody>
+          </table>
         </div>
       )}
     </div>

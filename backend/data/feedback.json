@@ -1,0 +1,42 @@
+[
+  {
+    "id": "4453120f-f46b-4549-98e5-a239fba1e0bd",
+    "name": "vineet",
+    "email": "patel@gmail.com",
+    "rating": 5,
+    "message": "good collection",
+    "page_url": "http://localhost:5173/product/b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e",
+    "created_at": "2026-03-01 03:52:49.908561+00:00",
+    "is_read": true
+  },
+  {
+    "id": "c96b5118-35b0-4887-8427-d4d19f0f7e90",
+    "name": "ayushi",
+    "email": "ayushi@chutki.com",
+    "rating": 5,
+    "message": "mein pagal hu",
+    "page_url": "http://localhost:5173/",
+    "created_at": "2026-03-01 04:14:42.170401+00:00",
+    "is_read": true
+  },
+  {
+    "id": "f0b4e922-0f79-4279-ad3e-b027990400e6",
+    "name": "sweta",
+    "email": "sweta@gmail.com",
+    "rating": 5,
+    "message": "mice collection",
+    "page_url": "http://localhost:5173/category/cotton-sarees",
+    "created_at": "2026-03-01 13:31:18.643839+00:00",
+    "is_read": true
+  },
+  {
+    "id": "659883a5-4d24-4260-9170-b495b7009934",
+    "name": "rosy",
+    "email": "rosy@gmail.com",
+    "rating": 5,
+    "message": "good",
+    "page_url": "http://localhost:5173/",
+    "created_at": "2026-03-01 13:32:37.793746+00:00",
+    "is_read": true
+  }
+]

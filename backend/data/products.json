@@ -92,6 +92,23 @@
     "default_whatsapp_number_id": null,
     "created_by": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
     "created_at": "2026-02-28 03:29:52.304720+00:00",
-    "updated_at": "2026-02-28T04:02:38.139694+00:00"
+    "updated_at": "2026-03-01T04:17:30.835755+00:00"
+  },
+  {
+    "id": "9d10c68c-443d-4525-bba8-7f69df129254",
+    "title": "Tissu Bandha Saree",
+    "description": "Hathi design",
+    "base_price": 20000.0,
+    "active": true,
+    "sku": "TBS-001",
+    "category_id": "cat-001",
+    "default_whatsapp_number_id": null,
+    "product_code": "TBS-001",
+    "saree_length": "6.2 Meters",
+    "blouse_length": "0.80 Meter",
+    "care_instruction": "Dry clean only",
+    "created_by": "247c8621-6ef0-456c-b6f5-95a4c71d99ff",
+    "created_at": "2026-03-01 13:36:20.992548+00:00",
+    "updated_at": "2026-03-02T03:55:18.284333+00:00"
   }
 ]
