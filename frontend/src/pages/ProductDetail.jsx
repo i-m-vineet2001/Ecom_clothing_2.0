@@ -1090,7 +1090,10 @@ const ProductDetail = () => {
                   In Stock
                 </Badge>
               ) : (
-                <Badge variant="destructive" data-testid="out-of-stock-badge">
+                <Badge variant="inline" 
+                data-testid="out-of-stock-badge"
+                className = "text-red border-red"
+                >
                   Out of Stock
                 </Badge>
               )}
