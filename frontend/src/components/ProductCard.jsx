@@ -102,8 +102,10 @@ const ProductCard = ({ product }) => {
           )}
           {!isInStock && (
             <Badge
-              variant="destructive"
-              className="text-[10px] px-2 py-0.5"
+              // variant="destructive"
+              // className="text-[10px] px-2 py-0.5"
+              // data-testid="out-of-stock-badge"
+              className="bg-red-600 text-white border-none text-[10px] px-2 py-0.5"
               data-testid="out-of-stock-badge"
             >
               Out of Stock
