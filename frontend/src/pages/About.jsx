@@ -128,20 +128,6 @@ const About = () => {
           </div>
         </div>
 
-<<<<<<< HEAD
-            <h2 className="font-heading text-2xl font-medium text-[#2C2C2C] mt-12 mb-4">
-              Contact Us
-            </h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              Have questions? We're here to help! Reach out to us through
-              WhatsApp for instant assistance with your enquiries.
-            </p>
-            <div className="bg-[#F2F0EB] p-6 rounded-md">
-              <p className="text-gray-700">
-                <strong>WhatsApp:</strong> <button onClick={() => window.open("https://wa.me/917735813913")} className="hover:underline">+91 77358***13913</button>
-                <br />
-                <strong>Email:</strong> <button onClick={() => window.open("mailto:info@gmbastralaya.com")} className="hover:underline">info@gmbastralaya.com</button>
-=======
         {/* ── Contact Card ───────────────────────────────────────────── */}
         <div className="bg-[#2C2C2C] rounded-[2rem] p-8 sm:p-12 text-white overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#C5A059]/10 rounded-full blur-3xl -mr-32 -mt-32" />
@@ -153,7 +139,7 @@ const About = () => {
               <p className="text-gray-400 mb-8 max-w-sm">
                 Have questions about our collections? Our style experts are
                 available on WhatsApp for instant assistance.
->>>>>>> feat/AboutPage
+
               </p>
               <div className="space-y-4">
                 <a
