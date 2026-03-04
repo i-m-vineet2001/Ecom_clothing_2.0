@@ -139,7 +139,6 @@ const About = () => {
               <p className="text-gray-400 mb-8 max-w-sm">
                 Have questions about our collections? Our style experts are
                 available on WhatsApp for instant assistance.
-
               </p>
               <div className="space-y-4">
                 <a
