@@ -213,8 +213,9 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Activity
 } from "lucide-react";
-
+import HelthCheck from "./dashboard/HealthCheck.jsx"
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -304,6 +305,12 @@ const Dashboard = () => {
       icon: FileText,
       label: "Audit Logs",
       roles: ["admin"],
+    },
+    {
+      path:"/dashboard/health",
+      icon: Activity,
+      label: "System Health",
+      roles: ["admin"]
     },
   ];
 
