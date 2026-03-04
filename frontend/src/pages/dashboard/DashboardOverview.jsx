@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Package, Tag, Warehouse, MessageSquare } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Package, Tag, Warehouse, MessageSquare, Eye } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "../../lib/api.jsx";
 
 const DashboardOverview = () => {
@@ -14,6 +9,7 @@ const DashboardOverview = () => {
     activeDiscounts: 0,
     totalEnquiries: 0,
     lowStockProducts: 0,
+    visibleProducts:0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -63,11 +59,15 @@ const DashboardOverview = () => {
         (p) => p.inventory && p.inventory.quantity < 10,
       ).length;
 
+      const visibleProducts =
+        products?.data.filter((p) => p.active === true).length || 0;
+
       setStats({
         totalProducts: products.data.length,
         activeDiscounts,
         totalEnquiries: enquiries.data.length,
         lowStockProducts: lowStock,
+        visibleProducts,
       });
     } catch (error) {
       // This was showing the 422 error in your console
@@ -102,6 +102,12 @@ const DashboardOverview = () => {
       icon: Warehouse,
       color: "text-red-600",
     },
+    {
+      title: "Visible Products",
+      value: stats.visibleProducts,
+      icon: Eye,
+      color: "text-green-600",
+    },
   ];
 
   return (
@@ -115,7 +121,7 @@ const DashboardOverview = () => {
           <div className="w-8 h-8 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -180,6 +186,6 @@ const DashboardOverview = () => {
       </div>
     </div>
   );
-};;
+};
 
 export default DashboardOverview;
