@@ -1,26 +1,3 @@
-/**
- * ImageUploader.jsx
- *
- * Reusable drag-and-drop image upload component.
- * Works for both products (multi-image) and categories (single-image).
- *
- * Usage — Products (multi):
- *   <ImageUploader
- *     uploadUrl={`/products/${id}/images/upload`}
- *     multiple={true}
- *     currentImages={product.images}
- *     onDeleteUrl={`/products/${id}/images`}   // DELETE /products/:id/images/:imgId
- *     onChanged={fetchAll}
- *   />
- *
- * Usage — Category (single):
- *   <ImageUploader
- *     uploadUrl={`/categories/${id}/image/upload`}
- *     multiple={false}
- *     currentImages={category.image_url ? [{ url: category.image_url, id: null }] : []}
- *     onChanged={fetchAll}
- *   />
- */
 
 import React, { useState, useRef, useCallback } from "react";
 import {

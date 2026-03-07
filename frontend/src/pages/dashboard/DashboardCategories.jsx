@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -18,35 +17,193 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Plus, Edit, Trash2, Layers } from "lucide-react";
+import { Plus, Edit, Trash2, Layers, Upload, Check, AlertCircle } from "lucide-react";
 import api from "../../lib/api.jsx";
-import ImageUploader from "../../components/ImageUploader";
 import { toast } from "sonner";
+
+// ── Simple single-image uploader for categories ────────────────────────────
+// Uses only the "file" field — category endpoint does not accept "alt"
+
+
+
+
+const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSelect  }) => {
+  const [status, setStatus] = React.useState("idle");
+  const [errorMsg, setErrorMsg] = React.useState("");
+  const [dragging, setDragging] = React.useState(false);
+  const inputRef = React.useRef(null);
+
+
+
+  const upload = async (file) => {
+  if (!file || !file.type.startsWith("image/")) {
+    toast.error("Please select an image file");
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    toast.error("Image must be under 10 MB");
+    return;
+  }
+
+  // If category not created yet (Add mode)
+  if (!categoryId) {
+    if (onFileSelect) {
+      onFileSelect(file);
+      toast.success("Image selected. It will upload after category is created.");
+    }
+    return;
+  }
+
+  setStatus("uploading");
+  setErrorMsg("");
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    await api.post(`/categories/${categoryId}/image/upload`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    setStatus("done");
+    toast.success("Image uploaded!");
+
+    if (onChanged) onChanged();
+
+    setTimeout(() => setStatus("idle"), 2000);
+  } catch (e) {
+    const msg = e.response?.data?.detail || "Upload failed";
+    setStatus("error");
+    setErrorMsg(msg);
+    toast.error(msg);
+  }
+};
+
+  const onFileInput = (e) => {
+    const file = e.target.files?.[0];
+    if (file) upload(file);
+    e.target.value = "";
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) upload(file);
+  };
+
+  return (
+    <div className="space-y-3">
+
+      {/* Upload Drop Zone */}
+      <div
+        onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+        onClick={() => status !== "uploading" && inputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-xl transition-all cursor-pointer ${
+          dragging
+            ? "border-[#C5A059] bg-[#FDF8F0]"
+            : status === "uploading"
+            ? "border-[#C5A059]/40 bg-[#F9F8F5] opacity-60 pointer-events-none"
+            : "border-[#E8E5E0] bg-[#F9F8F5] hover:border-[#C5A059]/60 hover:bg-white"
+        }`}
+      >
+
+        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+            status === "done"
+              ? "bg-green-100"
+              : status === "error"
+              ? "bg-red-100"
+              : dragging
+              ? "bg-[#C5A059]"
+              : "bg-white shadow-sm border border-[#F2F0EB]"
+          }`}>
+
+            {status === "uploading" ? (
+              <div className="w-5 h-5 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
+            ) : status === "done" ? (
+              <Check className="w-5 h-5 text-green-600" />
+            ) : status === "error" ? (
+              <AlertCircle className="w-5 h-5 text-red-500" />
+            ) : (
+              <Upload className={`w-5 h-5 ${dragging ? "text-white" : "text-[#C5A059]"}`} />
+            )}
+
+          </div>
+
+          <p className="text-sm font-semibold text-[#2C2C2C]">
+            {status === "uploading"
+              ? "Uploading…"
+              : status === "done"
+              ? "Upload complete!"
+              : status === "error"
+              ? errorMsg
+              : dragging
+              ? "Drop to upload!"
+              : "Click or drag an image here"}
+          </p>
+
+          {status === "idle" && (
+            <p className="text-xs text-gray-400 mt-1">
+              JPEG, PNG, WebP · max 10 MB
+            </p>
+          )}
+        </div>
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={onFileInput}
+        />
+      </div>
+
+    </div>
+  );
+};
+
 
 const DashboardCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null); // null = add mode
+  const [editingCategory, setEditingCategory] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     image_url: "",
   });
-  const [saving, setSaving] = useState(false);
+const handleDeleteImage = async () => {
+  if (!editingCategory) return;
 
+  if (!window.confirm("Delete this image?")) return;
+
+  try {
+    await api.delete(`/categories/${editingCategory.id}/image`);
+
+    setFormData((prev) => ({
+      ...prev,
+      image_url: "",
+    }));
+
+    toast.success("Image deleted");
+    fetchCategories();
+  } catch {
+    toast.error("Failed to delete image");
+  }
+};
+  const [saving, setSaving] = useState(false);
+const [pendingImage, setPendingImage] = useState(null);
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // ── ROOT CAUSE FIX ────────────────────────────────────────────────────────
-  // The original code used <DialogTrigger> wrapping "Add Category" while also
-  // calling setFormData + setDialogOpen(true) in handleEdit. Because React 18
-  // batches state updates, the dialog opened BEFORE formData was updated,
-  // always showing the last-set values (e.g. "Cotton Sarees").
-  //
-  // Fix: Never use DialogTrigger. Control the dialog purely via open/onOpenChange.
-  // Use this useEffect so formData always syncs AFTER editingCategory is set.
   useEffect(() => {
     if (editingCategory) {
       setFormData({
@@ -72,12 +229,12 @@ const DashboardCategories = () => {
   };
 
   const handleAdd = () => {
-    setEditingCategory(null); // triggers useEffect → clears form
+    setEditingCategory(null);
     setDialogOpen(true);
   };
 
   const handleEdit = (cat) => {
-    setEditingCategory(cat); // triggers useEffect → fills form with this category's data
+    setEditingCategory(cat);
     setDialogOpen(true);
   };
 
@@ -86,35 +243,81 @@ const DashboardCategories = () => {
     setEditingCategory(null);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      toast.error("Name is required");
-      return;
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!formData.name.trim()) {
+  //     toast.error("Name is required");
+  //     return;
+  //   }
+  //   setSaving(true);
+  //   try {
+  //     // FIX: Only send image_url if it's not empty to prevent overwriting
+  //     if (editingCategory) {
+  //       await api.put(`/categories/${editingCategory.id}`, formData);
+  //       toast.success("Category updated!");
+  //     } else {
+  //       await api.post("/categories", formData);
+  //       toast.success("Category created!");
+  //     }
+  //     handleClose();
+  //     fetchCategories();
+  //   } catch (e) {
+  //     toast.error(e.response?.data?.detail || "Failed to save category");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!formData.name.trim()) {
+    toast.error("Name is required");
+    return;
+  }
+
+  setSaving(true);
+
+  try {
+    let categoryId = editingCategory?.id;
+
+    if (editingCategory) {
+      await api.put(`/categories/${categoryId}`, formData);
+      toast.success("Category updated!");
+    } else {
+      const res = await api.post("/categories", formData);
+      categoryId = res.data.id;
+      toast.success("Category created!");
     }
-    setSaving(true);
-    try {
-      if (editingCategory) {
-        await api.put(`/categories/${editingCategory.id}`, formData);
-        toast.success("Category updated!");
-      } else {
-        await api.post("/categories", formData);
-        toast.success("Category created!");
-      }
-      handleClose();
-      fetchCategories();
-    } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to save category");
-    } finally {
-      setSaving(false);
+
+    // Upload image if dropped
+    if (pendingImage && categoryId) {
+      const fd = new FormData();
+      fd.append("file", pendingImage);
+
+      await api.post(`/categories/${categoryId}/image/upload`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setPendingImage(null);
     }
-  };
+
+    handleClose();
+    fetchCategories();
+
+  } catch (e) {
+    toast.error(e.response?.data?.detail || "Failed to save category");
+  } finally {
+    setSaving(false);
+  }
+};
+
+
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm("Delete this category? Products will be uncategorized.")
-    )
-      return;
+    if (!window.confirm("Delete this category? Products will be uncategorized.")) return;
     try {
       await api.delete(`/categories/${id}`);
       toast.success("Category deleted");
@@ -132,10 +335,10 @@ const DashboardCategories = () => {
   ];
 
   return (
-    <div className="p-8" data-testid="dashboard-categories-page">
+    <div className="p-4 sm:p-8" data-testid="dashboard-categories-page">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="font-heading text-4xl font-semibold text-[#2C2C2C]">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8">
+        <h1 className="font-heading text-2xl sm:text-4xl font-semibold text-[#2C2C2C]">
           Categories
         </h1>
         <Button
@@ -147,34 +350,23 @@ const DashboardCategories = () => {
         </Button>
       </div>
 
-      {/* ── Dialog — manually controlled, NO DialogTrigger ──────────────── */}
-      <Dialog
-        open={dialogOpen}
-        onOpenChange={(o) => {
-          if (!o) handleClose();
-        }}
-      >
+      {/* Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
         <DialogContent className="max-w-lg !bg-white border border-[#E8E5E0] shadow-2xl">
           <DialogHeader>
             <DialogTitle className="font-heading text-xl">
-              {editingCategory
-                ? `Editing: ${editingCategory.name}`
-                : "Add New Category"}
+              {editingCategory ? `Editing: ${editingCategory.name}` : "Add New Category"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-5 mt-2">
             <div>
-              <Label htmlFor="cat-name">
-                Name <span className="text-red-400">*</span>
-              </Label>
+              <Label htmlFor="cat-name">Name <span className="text-red-400">*</span></Label>
               <Input
                 id="cat-name"
                 required
                 autoComplete="off"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Silk Sarees"
                 className="mt-1 focus:border-[#C5A059]"
                 data-testid="category-name-input"
@@ -186,95 +378,50 @@ const DashboardCategories = () => {
                 id="cat-desc"
                 rows={3}
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Brief description of this category…"
                 className="mt-1 focus:border-[#C5A059]"
                 data-testid="category-description-input"
               />
-            </div>
-            <div>
-              <Label className="block mb-1.5">Image</Label>
-              {editingCategory ? (
-                // Category exists — can upload directly
-                <ImageUploader
-                  uploadUrl={`/categories/${editingCategory.id}/image/upload`}
-                  multiple={false}
-                  currentImages={
-                    formData.image_url
-                      ? [{ url: formData.image_url, id: null }]
-                      : []
-                  }
-                  onChanged={async () => {
-                    // Refresh the category to get new image_url
-                    try {
-                      const res = await api.get(
-                        `/categories/${editingCategory.id}`,
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        image_url: res.data.image_url,
-                      }));
-                      fetchCategories();
-                    } catch {}
-                  }}
-                />
-              ) : (
-                // New category — show URL field, image upload available after save
-                <div className="space-y-2">
-                  <Input
-                    id="cat-img"
-                    value={formData.image_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image_url: e.target.value })
-                    }
-                    placeholder="https://example.com/image.jpg (or save first to upload a file)"
-                    className="focus:border-[#C5A059]"
-                    data-testid="category-image-input"
-                  />
-                  <p className="text-xs text-gray-400 flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[#C5A059] inline-block" />
-                    Save the category first, then re-open Edit to upload an
-                    image file
-                  </p>
-                  {formData.image_url && (
-                    <div className="w-full aspect-[3/1] bg-[#F2F0EB] overflow-hidden rounded-lg">
-                      <img
-                        src={formData.image_url}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+              </div>
+
+{editingCategory && (
+  <div>
+  <Label className="block mb-1.5">Image</Label>
+
+  <CategoryImageUploader
+    categoryId={editingCategory?.id}
+    currentImageUrl={formData.image_url}
+    onFileSelect={(file) => setPendingImage(file)}
+    onChanged={async () => {
+      if (!editingCategory) return;
+
+      const res = await api.get(`/categories/${editingCategory.id}`);
+      setFormData((prev) => ({
+        ...prev,
+        image_url: res.data.image_url,
+      }));
+      fetchCategories();
+    }}
+  />
+</div>
+)}
             <div className="flex gap-3 justify-end pt-2 border-t border-[#F2F0EB]">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
               <Button
                 type="submit"
                 disabled={saving}
                 className="bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors"
                 data-testid="save-category-button"
               >
-                {saving
-                  ? "Saving…"
-                  : editingCategory
-                    ? "Update Category"
-                    : "Create Category"}
+                {saving ? "Saving…" : editingCategory ? "Update Category" : "Create Category"}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
+      {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
@@ -283,20 +430,15 @@ const DashboardCategories = () => {
         <div className="text-center py-24 bg-white border border-[#F2F0EB] rounded-xl">
           <Layers className="w-12 h-12 text-gray-200 mx-auto mb-4" />
           <p className="text-gray-500 text-lg mb-1">No categories yet.</p>
-          <p className="text-sm text-gray-400 mb-5">
-            Create your first category to organize products.
-          </p>
-          <Button
-            className="bg-[#2C2C2C] text-white hover:bg-[#C5A059]"
-            onClick={handleAdd}
-          >
+          <p className="text-sm text-gray-400 mb-5">Create your first category to organize products.</p>
+          <Button className="bg-[#2C2C2C] text-white hover:bg-[#C5A059]" onClick={handleAdd}>
             <Plus className="w-4 h-4 mr-2" /> Add First Category
           </Button>
         </div>
       ) : (
         <>
-          {/* Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
             {categories.map((cat, idx) => (
               <div
                 key={cat.id}
@@ -308,19 +450,13 @@ const DashboardCategories = () => {
                     src={cat.image_url || fallbacks[idx % fallbacks.length]}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.src = fallbacks[idx % fallbacks.length];
-                    }}
+                    onError={(e) => { e.target.src = fallbacks[idx % fallbacks.length]; }}
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-heading text-base font-medium text-[#2C2C2C] mb-1">
-                    {cat.name}
-                  </h3>
+                  <h3 className="font-heading text-base font-medium text-[#2C2C2C] mb-1">{cat.name}</h3>
                   {cat.description && (
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">
-                      {cat.description}
-                    </p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{cat.description}</p>
                   )}
                   <div className="flex gap-2">
                     <Button
@@ -347,12 +483,10 @@ const DashboardCategories = () => {
             ))}
           </div>
 
-          {/* Table */}
-          <div className="bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
+          {/* Table — hidden on mobile, shown on md+ */}
+          <div className="hidden md:block bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-[#F2F0EB]">
-              <h2 className="font-heading text-lg font-medium text-[#2C2C2C]">
-                All Categories
-              </h2>
+              <h2 className="font-heading text-lg font-medium text-[#2C2C2C]">All Categories</h2>
             </div>
             <Table>
               <TableHeader>
@@ -365,14 +499,8 @@ const DashboardCategories = () => {
               </TableHeader>
               <TableBody>
                 {categories.map((cat) => (
-                  <TableRow
-                    key={cat.id}
-                    className="hover:bg-[#F9F8F5]/50"
-                    data-testid="category-row"
-                  >
-                    <TableCell className="font-medium font-heading">
-                      {cat.name}
-                    </TableCell>
+                  <TableRow key={cat.id} className="hover:bg-[#F9F8F5]/50" data-testid="category-row">
+                    <TableCell className="font-medium font-heading">{cat.name}</TableCell>
                     <TableCell className="text-gray-500 text-sm max-w-xs truncate">
                       {cat.description || "—"}
                     </TableCell>
@@ -383,9 +511,7 @@ const DashboardCategories = () => {
                             src={cat.image_url}
                             alt={cat.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                            }}
+                            onError={(e) => { e.target.style.display = "none"; }}
                           />
                         </div>
                       ) : (
@@ -395,8 +521,7 @@ const DashboardCategories = () => {
                     <TableCell>
                       <div className="flex gap-1 justify-end pr-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="ghost" size="sm"
                           className="h-8 w-8 p-0 hover:bg-gray-100"
                           onClick={() => handleEdit(cat)}
                           data-testid="edit-category-row-button"
@@ -404,8 +529,7 @@ const DashboardCategories = () => {
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="ghost" size="sm"
                           className="h-8 w-8 p-0 hover:bg-red-50"
                           onClick={() => handleDelete(cat.id)}
                           data-testid="delete-category-row-button"

@@ -1,49 +1,246 @@
 
 
+// import React, { useState, useRef, useEffect } from "react";
+// import { Link } from "react-router-dom";
+// import { MessageCircle } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
+// import {
+//   formatPrice,
+//   maskPhoneNumber,
+//   generateWhatsAppLink,
+// } from "../lib/utils";
+// import api from "../lib/api";
+// import { toast } from "sonner";
+
+// const FALLBACK =
+//   "https://images.unsplash.com/photo-1683140426885-6c0ce899409c?w=800";
+
+// const ProductCard = ({ product }) => {
+//   const hasDiscount = product.discount && product.discount.active;
+//   const isInStock = product.inventory && product.inventory.quantity > 0;
+
+//   const images =
+//     product.images && product.images.length > 0
+//       ? product.images
+//       : [{ url: FALLBACK, alt: product.title }];
+
+//   const [activeIdx, setActiveIdx] = useState(0);
+//   const intervalRef = useRef(null);
+
+//   // cleanup interval when component unmounts
+//   useEffect(() => {
+//     return () => clearInterval(intervalRef.current);
+//   }, []);
+
+//   const handleMouseEnter = () => {
+//     if (images.length < 2) return;
+
+//     clearInterval(intervalRef.current);
+
+//     let idx = activeIdx;
+
+//     intervalRef.current = setInterval(() => {
+//       idx = (idx + 1) % images.length;
+//       setActiveIdx(idx);
+//     }, 1200);
+//   };
+
+//   const handleMouseLeave = () => {
+//     clearInterval(intervalRef.current);
+//     setActiveIdx(0);
+//   };
+
+//   const handleWhatsAppClick = async (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+
+//     if (!product.whatsapp_number) {
+//       toast.error("WhatsApp number not available");
+//       return;
+//     }
+
+//     try {
+//       await api.post("/enquiries", {
+//         product_id: product.id,
+//         e164_number: product.whatsapp_number.e164_number,
+//         message_preview: `Interested in ${product.title}`,
+//         source_url: window.location.href,
+//       });
+//     } catch (err) {
+//       console.error("Failed to create enquiry", err);
+//     }
+
+//     window.open(
+//       generateWhatsAppLink(product.whatsapp_number.e164_number, product),
+//       "_blank"
+//     );
+//   };
+
+//   return (
+//     <div
+//       className="group relative bg-white"
+//       onMouseEnter={handleMouseEnter}
+//       onMouseLeave={handleMouseLeave}
+//       data-testid="product-card"
+//     >
+//       {/* Image area */}
+//       <Link
+//         to={`/product/${product.id}`}
+//         className="block aspect-[3/4] overflow-hidden bg-[#F2F0EB] relative"
+//       >
+//         {images.slice(0, 2).map((img, idx) => (
+//           <img
+//             key={idx}
+//             src={img.url}
+//             alt={img.alt || product.title}
+//             className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${
+//               activeIdx === idx ? "opacity-100" : "opacity-0"
+//             }`}
+//           />
+//         ))}
+
+//         {/* Badges */}
+//         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+//           {hasDiscount && (
+//             <Badge
+//               className="bg-[#C5A059] text-white border-none text-[10px] px-2 py-0.5"
+//             >
+//               {product.discount.type === "percentage"
+//                 ? `-${product.discount.value}%`
+//                 : `-₹${product.discount.value}`}
+//             </Badge>
+//           )}
+
+//           {!isInStock && (
+//             <Badge
+//               className="bg-red-600 text-white border-none text-[10px] px-2 py-0.5"
+//             >
+//               Out of Stock
+//             </Badge>
+//           )}
+//         </div>
+
+//         {/* Image count badge */}
+//         {images.length > 2 && (
+//           <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 z-10">
+//             +{images.length - 1}
+//           </div>
+//         )}
+//       </Link>
+
+//       {/* Thumbnail strip */}
+//       {images.length > 1 && (
+//         <div className="flex gap-1.5 mt-2 overflow-x-auto">
+//           {images.slice(0, 4).map((img, idx) => (
+//             <button
+//               key={idx}
+//               onMouseEnter={() => setActiveIdx(idx)}
+//               onClick={(e) => {
+//                 e.preventDefault();
+//                 setActiveIdx(idx);
+//               }}
+//               className={`shrink-0 w-10 h-10 overflow-hidden border transition-all duration-150 ${
+//                 activeIdx === idx
+//                   ? "border-[#C5A059] opacity-100"
+//                   : "border-transparent opacity-60 hover:opacity-100"
+//               }`}
+//             >
+//               <img
+//                 src={img.url}
+//                 alt=""
+//                 className="w-full h-full object-cover object-top"
+//               />
+//             </button>
+//           ))}
+
+//           {images.length > 4 && (
+//             <div className="shrink-0 w-10 h-10 bg-[#F2F0EB] flex items-center justify-center">
+//               <span className="text-[9px] font-bold text-gray-500">
+//                 +{images.length - 4}
+//               </span>
+//             </div>
+//           )}
+//         </div>
+//       )}
+
+//       {/* Product info */}
+//       <div className="pt-3 pb-2">
+//         <Link to={`/product/${product.id}`}>
+//           <h3 className="font-heading text-base text-gray-900 hover:text-[#C5A059] transition-colors mb-1.5 leading-snug">
+//             {product.title}
+//           </h3>
+//         </Link>
+
+//         <div className="flex items-baseline gap-2 mb-3">
+//           {hasDiscount ? (
+//             <>
+//               <span className="text-base font-bold text-[#2C2C2C]">
+//                 {formatPrice(product.final_price)}
+//               </span>
+//               <span className="text-sm text-gray-400 line-through">
+//                 {formatPrice(product.base_price)}
+//               </span>
+//             </>
+//           ) : (
+//             <span className="text-base font-bold text-[#2C2C2C]">
+//               {formatPrice(product.base_price)}
+//             </span>
+//           )}
+//         </div>
+
+//         {product.whatsapp_number && (
+//           <div className="space-y-1.5">
+//             <div className="text-xs text-gray-400">
+//               WhatsApp: {maskPhoneNumber(product.whatsapp_number.e164_number)}
+//             </div>
+
+//             <Button
+//               onClick={handleWhatsAppClick}
+//               disabled={!isInStock}
+//               className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 py-2.5 rounded-none font-medium text-sm transition-colors"
+//             >
+//               <MessageCircle className="w-4 h-4" />
+//               Enquire on WhatsApp
+//             </Button>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ProductCard;
+
+
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  formatPrice,
-  maskPhoneNumber,
-  generateWhatsAppLink,
-} from "../lib/utils";
+import { formatPrice, maskPhoneNumber, generateWhatsAppLink } from "../lib/utils";
 import api from "../lib/api";
 import { toast } from "sonner";
 
-const FALLBACK =
-  "https://images.unsplash.com/photo-1683140426885-6c0ce899409c?w=800";
+const FALLBACK = "https://images.unsplash.com/photo-1683140426885-6c0ce899409c?w=800";
 
 const ProductCard = ({ product }) => {
   const hasDiscount = product.discount && product.discount.active;
   const isInStock = product.inventory && product.inventory.quantity > 0;
-
-  const images =
-    product.images && product.images.length > 0
-      ? product.images
-      : [{ url: FALLBACK, alt: product.title }];
+  const images = product.images?.length > 0 ? product.images : [{ url: FALLBACK, alt: product.title }];
 
   const [activeIdx, setActiveIdx] = useState(0);
   const intervalRef = useRef(null);
 
-  // cleanup interval when component unmounts
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
   const handleMouseEnter = () => {
     if (images.length < 2) return;
-
     clearInterval(intervalRef.current);
-
-    let idx = activeIdx;
-
     intervalRef.current = setInterval(() => {
-      idx = (idx + 1) % images.length;
-      setActiveIdx(idx);
-    }, 1200);
+      setActiveIdx((prev) => (prev + 1) % Math.min(images.length, 3)); // Cycle first 3 images
+    }, 1500);
   };
 
   const handleMouseLeave = () => {
@@ -54,12 +251,10 @@ const ProductCard = ({ product }) => {
   const handleWhatsAppClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!product.whatsapp_number) {
-      toast.error("WhatsApp number not available");
+      toast.error("Contact unavailable");
       return;
     }
-
     try {
       await api.post("/enquiries", {
         product_id: product.id,
@@ -67,143 +262,84 @@ const ProductCard = ({ product }) => {
         message_preview: `Interested in ${product.title}`,
         source_url: window.location.href,
       });
-    } catch (err) {
-      console.error("Failed to create enquiry", err);
-    }
-
-    window.open(
-      generateWhatsAppLink(product.whatsapp_number.e164_number, product),
-      "_blank"
-    );
+    } catch (err) {}
+    window.open(generateWhatsAppLink(product.whatsapp_number.e164_number, product), "_blank");
   };
 
   return (
     <div
-      className="group relative bg-white"
+      className="group relative bg-transparent"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      data-testid="product-card"
     >
-      {/* Image area */}
+      {/* ─── IMAGE AREA ─── */}
       <Link
         to={`/product/${product.id}`}
-        className="block aspect-[3/4] overflow-hidden bg-[#F2F0EB] relative"
+        className="block aspect-[3/4] overflow-hidden bg-[#F2F0EB] relative shadow-sm transition-shadow group-hover:shadow-xl"
       >
-        {images.slice(0, 2).map((img, idx) => (
+        {images.slice(0, 3).map((img, idx) => (
           <img
             key={idx}
             src={img.url}
             alt={img.alt || product.title}
-            className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${
-              activeIdx === idx ? "opacity-100" : "opacity-0"
+            className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-1000 ease-in-out ${
+              activeIdx === idx ? "opacity-100 scale-105" : "opacity-0 scale-100"
             }`}
           />
         ))}
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+        {/* Labels (Top Left) */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
           {hasDiscount && (
-            <Badge
-              className="bg-[#C5A059] text-white border-none text-[10px] px-2 py-0.5"
-            >
-              {product.discount.type === "percentage"
-                ? `-${product.discount.value}%`
-                : `-₹${product.discount.value}`}
-            </Badge>
+            <span className="bg-[#C5A059] text-white text-[9px] font-bold tracking-[0.2em] uppercase px-2 py-1 shadow-lg">
+              {product.discount.type === "percentage" ? `-${product.discount.value}%` : `OFF ₹${product.discount.value}`}
+            </span>
           )}
-
           {!isInStock && (
-            <Badge
-              className="bg-red-600 text-white border-none text-[10px] px-2 py-0.5"
-            >
+            <span className="bg-white/90 backdrop-blur-md text-red-500 text-[9px] font-bold tracking-[0.2em] uppercase px-2 py-1 border border-red-100 shadow-lg">
               Out of Stock
-            </Badge>
-          )}
-        </div>
-
-        {/* Image count badge */}
-        {images.length > 2 && (
-          <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 z-10">
-            +{images.length - 1}
-          </div>
-        )}
-      </Link>
-
-      {/* Thumbnail strip */}
-      {images.length > 1 && (
-        <div className="flex gap-1.5 mt-2 overflow-x-auto">
-          {images.slice(0, 4).map((img, idx) => (
-            <button
-              key={idx}
-              onMouseEnter={() => setActiveIdx(idx)}
-              onClick={(e) => {
-                e.preventDefault();
-                setActiveIdx(idx);
-              }}
-              className={`shrink-0 w-10 h-10 overflow-hidden border transition-all duration-150 ${
-                activeIdx === idx
-                  ? "border-[#C5A059] opacity-100"
-                  : "border-transparent opacity-60 hover:opacity-100"
-              }`}
-            >
-              <img
-                src={img.url}
-                alt=""
-                className="w-full h-full object-cover object-top"
-              />
-            </button>
-          ))}
-
-          {images.length > 4 && (
-            <div className="shrink-0 w-10 h-10 bg-[#F2F0EB] flex items-center justify-center">
-              <span className="text-[9px] font-bold text-gray-500">
-                +{images.length - 4}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Product info */}
-      <div className="pt-3 pb-2">
-        <Link to={`/product/${product.id}`}>
-          <h3 className="font-heading text-base text-gray-900 hover:text-[#C5A059] transition-colors mb-1.5 leading-snug">
-            {product.title}
-          </h3>
-        </Link>
-
-        <div className="flex items-baseline gap-2 mb-3">
-          {hasDiscount ? (
-            <>
-              <span className="text-base font-bold text-[#2C2C2C]">
-                {formatPrice(product.final_price)}
-              </span>
-              <span className="text-sm text-gray-400 line-through">
-                {formatPrice(product.base_price)}
-              </span>
-            </>
-          ) : (
-            <span className="text-base font-bold text-[#2C2C2C]">
-              {formatPrice(product.base_price)}
             </span>
           )}
         </div>
 
-        {product.whatsapp_number && (
-          <div className="space-y-1.5">
-            <div className="text-xs text-gray-400">
-              WhatsApp: {maskPhoneNumber(product.whatsapp_number.e164_number)}
-            </div>
+        {/* Quick Action Overlay (Bottom) */}
+        <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-20">
+          <button
+            onClick={handleWhatsAppClick}
+            disabled={!isInStock}
+            className="w-full h-14 bg-[#2C2C2C] text-white flex items-center justify-center gap-3 hover:bg-[#C5A059] transition-colors disabled:opacity-50"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase">Quick Enquiry</span>
+          </button>
+        </div>
+      </Link>
 
-            <Button
-              onClick={handleWhatsAppClick}
-              disabled={!isInStock}
-              className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] flex items-center justify-center gap-2 py-2.5 rounded-none font-medium text-sm transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Enquire on WhatsApp
-            </Button>
-          </div>
+      {/* ─── PRODUCT INFO ─── */}
+      <div className="pt-5 pb-2 px-1 text-center lg:text-left">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-1 mb-2">
+            <Link to={`/product/${product.id}`} className="block overflow-hidden">
+                <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400 group-hover:text-[#C5A059] transition-colors truncate">
+                    {product.title}
+                </h3>
+            </Link>
+            <div className="flex items-center gap-2">
+                <span className="text-sm font-serif italic text-[#2C2C2C]">
+                    {formatPrice(product.final_price)}
+                </span>
+            </div>
+        </div>
+        
+        {/* Subtle Indicator for more images */}
+        {images.length > 1 && (
+            <div className="flex justify-center lg:justify-start gap-1 mt-3">
+                {images.slice(0, 4).map((_, i) => (
+                    <div 
+                        key={i} 
+                        className={`h-[1px] transition-all duration-500 ${activeIdx === i ? 'w-4 bg-[#C5A059]' : 'w-2 bg-gray-200'}`}
+                    />
+                ))}
+            </div>
         )}
       </div>
     </div>

@@ -25,7 +25,7 @@ import Inventory from "./pages/dashboard/Inventory.jsx";
 import Feedback from "./pages/dashboard/Feedback.jsx";
 import Settings from "./pages/dashboard/Settings.jsx";
 import HealthCheck from "./pages/dashboard/HealthCheck.jsx";
-
+import { useEffect } from 'react';
 
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -55,6 +55,37 @@ const PublicLayout = ({ children }) => (
 );
 
 function App() {
+  useEffect(() => {
+    const originalTitle = "GM_Bastralaya";
+    const leaveTitle = "Don't__go! 🛍️";
+    let typingInterval;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        let i = 0;
+        document.title = " "; // Clear title to start typing
+        
+        typingInterval = setInterval(() => {
+          if (i < leaveTitle.length) {
+            document.title += leaveTitle.charAt(i);
+            i++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 150); // Speed of typing (150ms per letter)
+      } else {
+        clearInterval(typingInterval);
+        document.title = originalTitle;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(typingInterval);
+    };
+  }, []);
   return (
     <AuthProvider>
       <BrowserRouter>
