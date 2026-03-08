@@ -1,3 +1,546 @@
+// import React, { useEffect, useState } from "react";
+// import { Button } from "../../components/ui/button";
+// import { Input } from "../../components/ui/input";
+// import { Label } from "../../components/ui/label";
+// import { Textarea } from "../../components/ui/textarea";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+// } from "../../components/ui/dialog";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "../../components/ui/table";
+// import { Plus, Edit, Trash2, Layers, Upload, Check, AlertCircle } from "lucide-react";
+// import api from "../../lib/api.jsx";
+// import { toast } from "sonner";
+
+// // ── Simple single-image uploader for categories ────────────────────────────
+// // Uses only the "file" field — category endpoint does not accept "alt"
+
+// const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSelect  }) => {
+//   const [status, setStatus] = React.useState("idle");
+//   const [errorMsg, setErrorMsg] = React.useState("");
+//   const [dragging, setDragging] = React.useState(false);
+//   const inputRef = React.useRef(null);
+
+//   const upload = async (file) => {
+//   if (!file || !file.type.startsWith("image/")) {
+//     toast.error("Please select an image file");
+//     return;
+//   }
+
+//   if (file.size > 10 * 1024 * 1024) {
+//     toast.error("Image must be under 10 MB");
+//     return;
+//   }
+
+//   // If category not created yet (Add mode)
+//   if (!categoryId) {
+//     if (onFileSelect) {
+//       onFileSelect(file);
+//       toast.success("Image selected. It will upload after category is created.");
+//     }
+//     return;
+//   }
+
+//   setStatus("uploading");
+//   setErrorMsg("");
+
+//   const fd = new FormData();
+//   fd.append("file", file);
+
+//   try {
+//     await api.post(`/categories/${categoryId}/image/upload`, fd, {
+//       headers: { "Content-Type": "multipart/form-data" },
+//     });
+
+//     setStatus("done");
+//     toast.success("Image uploaded!");
+
+//     if (onChanged) onChanged();
+
+//     setTimeout(() => setStatus("idle"), 2000);
+//   } catch (e) {
+//     const msg = e.response?.data?.detail || "Upload failed";
+//     setStatus("error");
+//     setErrorMsg(msg);
+//     toast.error(msg);
+//   }
+// };
+
+//   const onFileInput = (e) => {
+//     const file = e.target.files?.[0];
+//     if (file) upload(file);
+//     e.target.value = "";
+//   };
+
+//   const onDrop = (e) => {
+//     e.preventDefault();
+//     setDragging(false);
+//     const file = e.dataTransfer.files?.[0];
+//     if (file) upload(file);
+//   };
+
+//   return (
+//     <div className="space-y-3">
+
+//       {/* Upload Drop Zone */}
+//       <div
+//         onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+//         onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+//         onDragOver={(e) => e.preventDefault()}
+//         onDrop={onDrop}
+//         onClick={() => status !== "uploading" && inputRef.current?.click()}
+//         className={`relative border-2 border-dashed rounded-xl transition-all cursor-pointer ${
+//           dragging
+//             ? "border-[#C5A059] bg-[#FDF8F0]"
+//             : status === "uploading"
+//             ? "border-[#C5A059]/40 bg-[#F9F8F5] opacity-60 pointer-events-none"
+//             : "border-[#E8E5E0] bg-[#F9F8F5] hover:border-[#C5A059]/60 hover:bg-white"
+//         }`}
+//       >
+
+//         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+
+//           <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+//             status === "done"
+//               ? "bg-green-100"
+//               : status === "error"
+//               ? "bg-red-100"
+//               : dragging
+//               ? "bg-[#C5A059]"
+//               : "bg-white shadow-sm border border-[#F2F0EB]"
+//           }`}>
+
+//             {status === "uploading" ? (
+//               <div className="w-5 h-5 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
+//             ) : status === "done" ? (
+//               <Check className="w-5 h-5 text-green-600" />
+//             ) : status === "error" ? (
+//               <AlertCircle className="w-5 h-5 text-red-500" />
+//             ) : (
+//               <Upload className={`w-5 h-5 ${dragging ? "text-white" : "text-[#C5A059]"}`} />
+//             )}
+
+//           </div>
+
+//           <p className="text-sm font-semibold text-[#2C2C2C]">
+//             {status === "uploading"
+//               ? "Uploading…"
+//               : status === "done"
+//               ? "Upload complete!"
+//               : status === "error"
+//               ? errorMsg
+//               : dragging
+//               ? "Drop to upload!"
+//               : "Click or drag an image here"}
+//           </p>
+
+//           {status === "idle" && (
+//             <p className="text-xs text-gray-400 mt-1">
+//               JPEG, PNG, WebP · max 10 MB
+//             </p>
+//           )}
+//         </div>
+
+//         <input
+//           ref={inputRef}
+//           type="file"
+//           accept="image/jpeg,image/png,image/webp,image/gif"
+//           className="hidden"
+//           onChange={onFileInput}
+//         />
+//       </div>
+
+//     </div>
+//   );
+// };
+
+// const DashboardCategories = () => {
+//   const [categories, setCategories] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [dialogOpen, setDialogOpen] = useState(false);
+//   const [editingCategory, setEditingCategory] = useState(null);
+//   const [formData, setFormData] = useState({
+//     name: "",
+//     description: "",
+//     image_url: "",
+//   });
+// const handleDeleteImage = async () => {
+//   if (!editingCategory) return;
+
+//   if (!window.confirm("Delete this image?")) return;
+
+//   try {
+//     await api.delete(`/categories/${editingCategory.id}/image`);
+
+//     setFormData((prev) => ({
+//       ...prev,
+//       image_url: "",
+//     }));
+
+//     toast.success("Image deleted");
+//     fetchCategories();
+//   } catch {
+//     toast.error("Failed to delete image");
+//   }
+// };
+//   const [saving, setSaving] = useState(false);
+// const [pendingImage, setPendingImage] = useState(null);
+//   useEffect(() => {
+//     fetchCategories();
+//   }, []);
+
+//   useEffect(() => {
+//     if (editingCategory) {
+//       setFormData({
+//         name: editingCategory.name,
+//         description: editingCategory.description || "",
+//         image_url: editingCategory.image_url || "",
+//       });
+//     } else {
+//       setFormData({ name: "", description: "", image_url: "" });
+//     }
+//   }, [editingCategory]);
+
+//   const fetchCategories = async () => {
+//     setLoading(true);
+//     try {
+//       const res = await api.get("/categories");
+//       setCategories(res.data);
+//     } catch {
+//       toast.error("Failed to fetch categories");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleAdd = () => {
+//     setEditingCategory(null);
+//     setDialogOpen(true);
+//   };
+
+//   const handleEdit = (cat) => {
+//     setEditingCategory(cat);
+//     setDialogOpen(true);
+//   };
+
+//   const handleClose = () => {
+//     setDialogOpen(false);
+//     setEditingCategory(null);
+//   };
+
+//   // const handleSubmit = async (e) => {
+//   //   e.preventDefault();
+//   //   if (!formData.name.trim()) {
+//   //     toast.error("Name is required");
+//   //     return;
+//   //   }
+//   //   setSaving(true);
+//   //   try {
+//   //     // FIX: Only send image_url if it's not empty to prevent overwriting
+//   //     if (editingCategory) {
+//   //       await api.put(`/categories/${editingCategory.id}`, formData);
+//   //       toast.success("Category updated!");
+//   //     } else {
+//   //       await api.post("/categories", formData);
+//   //       toast.success("Category created!");
+//   //     }
+//   //     handleClose();
+//   //     fetchCategories();
+//   //   } catch (e) {
+//   //     toast.error(e.response?.data?.detail || "Failed to save category");
+//   //   } finally {
+//   //     setSaving(false);
+//   //   }
+//   // };
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   if (!formData.name.trim()) {
+//     toast.error("Name is required");
+//     return;
+//   }
+
+//   setSaving(true);
+
+//   try {
+//     let categoryId = editingCategory?.id;
+
+//     if (editingCategory) {
+//       await api.put(`/categories/${categoryId}`, formData);
+//       toast.success("Category updated!");
+//     } else {
+//       const res = await api.post("/categories", formData);
+//       categoryId = res.data.id;
+//       toast.success("Category created!");
+//     }
+
+//     // Upload image if dropped
+//     if (pendingImage && categoryId) {
+//       const fd = new FormData();
+//       fd.append("file", pendingImage);
+
+//       await api.post(`/categories/${categoryId}/image/upload`, fd, {
+//         headers: { "Content-Type": "multipart/form-data" },
+//       });
+
+//       setPendingImage(null);
+//     }
+
+//     handleClose();
+//     fetchCategories();
+
+//   } catch (e) {
+//     toast.error(e.response?.data?.detail || "Failed to save category");
+//   } finally {
+//     setSaving(false);
+//   }
+// };
+
+//   const handleDelete = async (id) => {
+//     if (!window.confirm("Delete this category? Products will be uncategorized.")) return;
+//     try {
+//       await api.delete(`/categories/${id}`);
+//       toast.success("Category deleted");
+//       fetchCategories();
+//     } catch {
+//       toast.error("Failed to delete category");
+//     }
+//   };
+
+//   const fallbacks = [
+//     "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400",
+//     "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400",
+//     "https://images.unsplash.com/photo-1617627143233-4af8cfca1be3?w=400",
+//     "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=400",
+//   ];
+
+//   return (
+//     <div className="p-4 sm:p-8" data-testid="dashboard-categories-page">
+//       {/* Header */}
+//       <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8">
+//         <h1 className="font-heading text-2xl sm:text-4xl font-semibold text-[#2C2C2C]">
+//           Categories
+//         </h1>
+//         <Button
+//           onClick={handleAdd}
+//           className="bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors"
+//           data-testid="add-category-button"
+//         >
+//           <Plus className="w-4 h-4 mr-2" /> Add Category
+//         </Button>
+//       </div>
+
+//       {/* Dialog */}
+//       <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+//         <DialogContent className="max-w-lg !bg-white border border-[#E8E5E0] shadow-2xl">
+//           <DialogHeader>
+//             <DialogTitle className="font-heading text-xl">
+//               {editingCategory ? `Editing: ${editingCategory.name}` : "Add New Category"}
+//             </DialogTitle>
+//           </DialogHeader>
+//           <form onSubmit={handleSubmit} className="space-y-5 mt-2">
+//             <div>
+//               <Label htmlFor="cat-name">Name <span className="text-red-400">*</span></Label>
+//               <Input
+//                 id="cat-name"
+//                 required
+//                 autoComplete="off"
+//                 value={formData.name}
+//                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+//                 placeholder="e.g. Silk Sarees"
+//                 className="mt-1 focus:border-[#C5A059]"
+//                 data-testid="category-name-input"
+//               />
+//             </div>
+//             <div>
+//               <Label htmlFor="cat-desc">Description</Label>
+//               <Textarea
+//                 id="cat-desc"
+//                 rows={3}
+//                 value={formData.description}
+//                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+//                 placeholder="Brief description of this category…"
+//                 className="mt-1 focus:border-[#C5A059]"
+//                 data-testid="category-description-input"
+//               />
+//               </div>
+
+// {editingCategory && (
+//   <div>
+//   <Label className="block mb-1.5">Image</Label>
+
+//   <CategoryImageUploader
+//     categoryId={editingCategory?.id}
+//     currentImageUrl={formData.image_url}
+//     onFileSelect={(file) => setPendingImage(file)}
+//     onChanged={async () => {
+//       if (!editingCategory) return;
+
+//       const res = await api.get(`/categories/${editingCategory.id}`);
+//       setFormData((prev) => ({
+//         ...prev,
+//         image_url: res.data.image_url,
+//       }));
+//       fetchCategories();
+//     }}
+//   />
+// </div>
+// )}
+//             <div className="flex gap-3 justify-end pt-2 border-t border-[#F2F0EB]">
+//               <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+//               <Button
+//                 type="submit"
+//                 disabled={saving}
+//                 className="bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors"
+//                 data-testid="save-category-button"
+//               >
+//                 {saving ? "Saving…" : editingCategory ? "Update Category" : "Create Category"}
+//               </Button>
+//             </div>
+//           </form>
+//         </DialogContent>
+//       </Dialog>
+
+//       {/* Content */}
+//       {loading ? (
+//         <div className="flex items-center justify-center py-20">
+//           <div className="w-8 h-8 border-4 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
+//         </div>
+//       ) : categories.length === 0 ? (
+//         <div className="text-center py-24 bg-white border border-[#F2F0EB] rounded-xl">
+//           <Layers className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+//           <p className="text-gray-500 text-lg mb-1">No categories yet.</p>
+//           <p className="text-sm text-gray-400 mb-5">Create your first category to organize products.</p>
+//           <Button className="bg-[#2C2C2C] text-white hover:bg-[#C5A059]" onClick={handleAdd}>
+//             <Plus className="w-4 h-4 mr-2" /> Add First Category
+//           </Button>
+//         </div>
+//       ) : (
+//         <>
+//           {/* Cards grid */}
+//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+//             {categories.map((cat, idx) => (
+//               <div
+//                 key={cat.id}
+//                 className="bg-white border border-[#F2F0EB] rounded-xl overflow-hidden group hover:shadow-md transition-all"
+//                 data-testid="category-card"
+//               >
+//                 <div className="aspect-[3/2] bg-[#F2F0EB] overflow-hidden">
+//                   <img
+//                     src={cat.image_url || fallbacks[idx % fallbacks.length]}
+//                     alt={cat.name}
+//                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+//                     onError={(e) => { e.target.src = fallbacks[idx % fallbacks.length]; }}
+//                   />
+//                 </div>
+//                 <div className="p-4">
+//                   <h3 className="font-heading text-base font-medium text-[#2C2C2C] mb-1">{cat.name}</h3>
+//                   {cat.description && (
+//                     <p className="text-xs text-gray-500 line-clamp-2 mb-3">{cat.description}</p>
+//                   )}
+//                   <div className="flex gap-2">
+//                     <Button
+//                       variant="outline"
+//                       size="sm"
+//                       className="flex-1 text-xs h-8"
+//                       onClick={() => handleEdit(cat)}
+//                       data-testid="edit-category-button"
+//                     >
+//                       <Edit className="w-3 h-3 mr-1" /> Edit
+//                     </Button>
+//                     <Button
+//                       variant="ghost"
+//                       size="sm"
+//                       className="h-8 px-2 text-red-500 hover:bg-red-50"
+//                       onClick={() => handleDelete(cat.id)}
+//                       data-testid="delete-category-button"
+//                     >
+//                       <Trash2 className="w-3.5 h-3.5" />
+//                     </Button>
+//                   </div>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+
+//           {/* Table — hidden on mobile, shown on md+ */}
+//           <div className="hidden md:block bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
+//             <div className="px-6 py-4 border-b border-[#F2F0EB]">
+//               <h2 className="font-heading text-lg font-medium text-[#2C2C2C]">All Categories</h2>
+//             </div>
+//             <Table>
+//               <TableHeader>
+//                 <TableRow className="bg-[#F9F8F5]">
+//                   <TableHead>Name</TableHead>
+//                   <TableHead>Description</TableHead>
+//                   <TableHead>Image</TableHead>
+//                   <TableHead className="text-right pr-5">Actions</TableHead>
+//                 </TableRow>
+//               </TableHeader>
+//               <TableBody>
+//                 {categories.map((cat) => (
+//                   <TableRow key={cat.id} className="hover:bg-[#F9F8F5]/50" data-testid="category-row">
+//                     <TableCell className="font-medium font-heading">{cat.name}</TableCell>
+//                     <TableCell className="text-gray-500 text-sm max-w-xs truncate">
+//                       {cat.description || "—"}
+//                     </TableCell>
+//                     <TableCell>
+//                       {cat.image_url ? (
+//                         <div className="w-12 h-8 rounded bg-[#F2F0EB] overflow-hidden">
+//                           <img
+//                             src={cat.image_url}
+//                             alt={cat.name}
+//                             className="w-full h-full object-cover"
+//                             onError={(e) => { e.target.style.display = "none"; }}
+//                           />
+//                         </div>
+//                       ) : (
+//                         <span className="text-gray-400 text-sm">No image</span>
+//                       )}
+//                     </TableCell>
+//                     <TableCell>
+//                       <div className="flex gap-1 justify-end pr-2">
+//                         <Button
+//                           variant="ghost" size="sm"
+//                           className="h-8 w-8 p-0 hover:bg-gray-100"
+//                           onClick={() => handleEdit(cat)}
+//                           data-testid="edit-category-row-button"
+//                         >
+//                           <Edit className="w-4 h-4" />
+//                         </Button>
+//                         <Button
+//                           variant="ghost" size="sm"
+//                           className="h-8 w-8 p-0 hover:bg-red-50"
+//                           onClick={() => handleDelete(cat.id)}
+//                           data-testid="delete-category-row-button"
+//                         >
+//                           <Trash2 className="w-4 h-4 text-red-500" />
+//                         </Button>
+//                       </div>
+//                     </TableCell>
+//                   </TableRow>
+//                 ))}
+//               </TableBody>
+//             </Table>
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default DashboardCategories;
+
 import React, { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -17,68 +560,78 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Plus, Edit, Trash2, Layers, Upload, Check, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Layers,
+  Upload,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 import api from "../../lib/api.jsx";
 import { toast } from "sonner";
 
 // ── Simple single-image uploader for categories ────────────────────────────
 // Uses only the "file" field — category endpoint does not accept "alt"
 
-
-
-
-const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSelect  }) => {
+const CategoryImageUploader = ({
+  categoryId,
+  currentImageUrl,
+  onChanged,
+  onFileSelect,
+}) => {
   const [status, setStatus] = React.useState("idle");
   const [errorMsg, setErrorMsg] = React.useState("");
   const [dragging, setDragging] = React.useState(false);
   const inputRef = React.useRef(null);
 
-
-
   const upload = async (file) => {
-  if (!file || !file.type.startsWith("image/")) {
-    toast.error("Please select an image file");
-    return;
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    toast.error("Image must be under 10 MB");
-    return;
-  }
-
-  // If category not created yet (Add mode)
-  if (!categoryId) {
-    if (onFileSelect) {
-      onFileSelect(file);
-      toast.success("Image selected. It will upload after category is created.");
+    if (!file || !file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
     }
-    return;
-  }
 
-  setStatus("uploading");
-  setErrorMsg("");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10 MB");
+      return;
+    }
 
-  const fd = new FormData();
-  fd.append("file", file);
+    // If category not created yet (Add mode)
+    if (!categoryId) {
+      if (onFileSelect) {
+        onFileSelect(file);
+        toast.success(
+          "Image selected. It will upload after category is created.",
+        );
+      }
+      return;
+    }
 
-  try {
-    await api.post(`/categories/${categoryId}/image/upload`, fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    setStatus("uploading");
+    setErrorMsg("");
 
-    setStatus("done");
-    toast.success("Image uploaded!");
+    const fd = new FormData();
+    fd.append("file", file);
 
-    if (onChanged) onChanged();
+    try {
+      await api.post(`/categories/${categoryId}/image/upload`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    setTimeout(() => setStatus("idle"), 2000);
-  } catch (e) {
-    const msg = e.response?.data?.detail || "Upload failed";
-    setStatus("error");
-    setErrorMsg(msg);
-    toast.error(msg);
-  }
-};
+      setStatus("done");
+      toast.success("Image uploaded!");
+
+      if (onChanged) onChanged();
+
+      setTimeout(() => setStatus("idle"), 2000);
+    } catch (e) {
+      const msg = e.response?.data?.detail || "Upload failed";
+      setStatus("error");
+      setErrorMsg(msg);
+      toast.error(msg);
+    }
+  };
 
   const onFileInput = (e) => {
     const file = e.target.files?.[0];
@@ -95,11 +648,16 @@ const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSe
 
   return (
     <div className="space-y-3">
-
       {/* Upload Drop Zone */}
       <div
-        onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setDragging(false);
+        }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
         onClick={() => status !== "uploading" && inputRef.current?.click()}
@@ -107,23 +665,22 @@ const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSe
           dragging
             ? "border-[#C5A059] bg-[#FDF8F0]"
             : status === "uploading"
-            ? "border-[#C5A059]/40 bg-[#F9F8F5] opacity-60 pointer-events-none"
-            : "border-[#E8E5E0] bg-[#F9F8F5] hover:border-[#C5A059]/60 hover:bg-white"
+              ? "border-[#C5A059]/40 bg-[#F9F8F5] opacity-60 pointer-events-none"
+              : "border-[#E8E5E0] bg-[#F9F8F5] hover:border-[#C5A059]/60 hover:bg-white"
         }`}
       >
-
         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-            status === "done"
-              ? "bg-green-100"
-              : status === "error"
-              ? "bg-red-100"
-              : dragging
-              ? "bg-[#C5A059]"
-              : "bg-white shadow-sm border border-[#F2F0EB]"
-          }`}>
-
+          <div
+            className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+              status === "done"
+                ? "bg-green-100"
+                : status === "error"
+                  ? "bg-red-100"
+                  : dragging
+                    ? "bg-[#C5A059]"
+                    : "bg-white shadow-sm border border-[#F2F0EB]"
+            }`}
+          >
             {status === "uploading" ? (
               <div className="w-5 h-5 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin" />
             ) : status === "done" ? (
@@ -131,21 +688,22 @@ const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSe
             ) : status === "error" ? (
               <AlertCircle className="w-5 h-5 text-red-500" />
             ) : (
-              <Upload className={`w-5 h-5 ${dragging ? "text-white" : "text-[#C5A059]"}`} />
+              <Upload
+                className={`w-5 h-5 ${dragging ? "text-white" : "text-[#C5A059]"}`}
+              />
             )}
-
           </div>
 
           <p className="text-sm font-semibold text-[#2C2C2C]">
             {status === "uploading"
               ? "Uploading…"
               : status === "done"
-              ? "Upload complete!"
-              : status === "error"
-              ? errorMsg
-              : dragging
-              ? "Drop to upload!"
-              : "Click or drag an image here"}
+                ? "Upload complete!"
+                : status === "error"
+                  ? errorMsg
+                  : dragging
+                    ? "Drop to upload!"
+                    : "Click or drag an image here"}
           </p>
 
           {status === "idle" && (
@@ -163,11 +721,9 @@ const CategoryImageUploader = ({ categoryId, currentImageUrl, onChanged,onFileSe
           onChange={onFileInput}
         />
       </div>
-
     </div>
   );
 };
-
 
 const DashboardCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -179,27 +735,27 @@ const DashboardCategories = () => {
     description: "",
     image_url: "",
   });
-const handleDeleteImage = async () => {
-  if (!editingCategory) return;
+  const handleDeleteImage = async () => {
+    if (!editingCategory) return;
 
-  if (!window.confirm("Delete this image?")) return;
+    if (!window.confirm("Delete this image?")) return;
 
-  try {
-    await api.delete(`/categories/${editingCategory.id}/image`);
+    try {
+      await api.delete(`/categories/${editingCategory.id}/image`);
 
-    setFormData((prev) => ({
-      ...prev,
-      image_url: "",
-    }));
+      setFormData((prev) => ({
+        ...prev,
+        image_url: "",
+      }));
 
-    toast.success("Image deleted");
-    fetchCategories();
-  } catch {
-    toast.error("Failed to delete image");
-  }
-};
+      toast.success("Image deleted");
+      fetchCategories();
+    } catch {
+      toast.error("Failed to delete image");
+    }
+  };
   const [saving, setSaving] = useState(false);
-const [pendingImage, setPendingImage] = useState(null);
+  const [pendingImage, setPendingImage] = useState(null);
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -268,56 +824,54 @@ const [pendingImage, setPendingImage] = useState(null);
   //   }
   // };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!formData.name.trim()) {
-    toast.error("Name is required");
-    return;
-  }
-
-  setSaving(true);
-
-  try {
-    let categoryId = editingCategory?.id;
-
-    if (editingCategory) {
-      await api.put(`/categories/${categoryId}`, formData);
-      toast.success("Category updated!");
-    } else {
-      const res = await api.post("/categories", formData);
-      categoryId = res.data.id;
-      toast.success("Category created!");
+    if (!formData.name.trim()) {
+      toast.error("Name is required");
+      return;
     }
 
-    // Upload image if dropped
-    if (pendingImage && categoryId) {
-      const fd = new FormData();
-      fd.append("file", pendingImage);
+    setSaving(true);
 
-      await api.post(`/categories/${categoryId}/image/upload`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    try {
+      let categoryId = editingCategory?.id;
 
-      setPendingImage(null);
+      if (editingCategory) {
+        await api.put(`/categories/${categoryId}`, formData);
+        toast.success("Category updated!");
+      } else {
+        const res = await api.post("/categories", formData);
+        categoryId = res.data.id;
+        toast.success("Category created!");
+      }
+
+      // Upload image if dropped
+      if (pendingImage && categoryId) {
+        const fd = new FormData();
+        fd.append("file", pendingImage);
+
+        await api.post(`/categories/${categoryId}/image/upload`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        setPendingImage(null);
+      }
+
+      handleClose();
+      fetchCategories();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Failed to save category");
+    } finally {
+      setSaving(false);
     }
-
-    handleClose();
-    fetchCategories();
-
-  } catch (e) {
-    toast.error(e.response?.data?.detail || "Failed to save category");
-  } finally {
-    setSaving(false);
-  }
-};
-
-
+  };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this category? Products will be uncategorized.")) return;
+    if (
+      !window.confirm("Delete this category? Products will be uncategorized.")
+    )
+      return;
     try {
       await api.delete(`/categories/${id}`);
       toast.success("Category deleted");
@@ -351,22 +905,33 @@ const handleSubmit = async (e) => {
       </div>
 
       {/* Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(o) => {
+          if (!o) handleClose();
+        }}
+      >
         <DialogContent className="max-w-lg !bg-white border border-[#E8E5E0] shadow-2xl">
           <DialogHeader>
             <DialogTitle className="font-heading text-xl">
-              {editingCategory ? `Editing: ${editingCategory.name}` : "Add New Category"}
+              {editingCategory
+                ? `Editing: ${editingCategory.name}`
+                : "Add New Category"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-5 mt-2">
             <div>
-              <Label htmlFor="cat-name">Name <span className="text-red-400">*</span></Label>
+              <Label htmlFor="cat-name">
+                Name <span className="text-red-400">*</span>
+              </Label>
               <Input
                 id="cat-name"
                 required
                 autoComplete="off"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="e.g. Silk Sarees"
                 className="mt-1 focus:border-[#C5A059]"
                 data-testid="category-name-input"
@@ -378,43 +943,53 @@ const handleSubmit = async (e) => {
                 id="cat-desc"
                 rows={3}
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Brief description of this category…"
                 className="mt-1 focus:border-[#C5A059]"
                 data-testid="category-description-input"
               />
+            </div>
+
+            {editingCategory && (
+              <div>
+                <Label className="block mb-1.5">Image</Label>
+
+                <CategoryImageUploader
+                  categoryId={editingCategory?.id}
+                  currentImageUrl={formData.image_url}
+                  onFileSelect={(file) => setPendingImage(file)}
+                  onChanged={async () => {
+                    if (!editingCategory) return;
+
+                    const res = await api.get(
+                      `/categories/${editingCategory.id}`,
+                    );
+                    setFormData((prev) => ({
+                      ...prev,
+                      image_url: res.data.image_url,
+                    }));
+                    fetchCategories();
+                  }}
+                />
               </div>
-
-{editingCategory && (
-  <div>
-  <Label className="block mb-1.5">Image</Label>
-
-  <CategoryImageUploader
-    categoryId={editingCategory?.id}
-    currentImageUrl={formData.image_url}
-    onFileSelect={(file) => setPendingImage(file)}
-    onChanged={async () => {
-      if (!editingCategory) return;
-
-      const res = await api.get(`/categories/${editingCategory.id}`);
-      setFormData((prev) => ({
-        ...prev,
-        image_url: res.data.image_url,
-      }));
-      fetchCategories();
-    }}
-  />
-</div>
-)}
+            )}
             <div className="flex gap-3 justify-end pt-2 border-t border-[#F2F0EB]">
-              <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 disabled={saving}
                 className="bg-[#2C2C2C] text-white hover:bg-[#C5A059] transition-colors"
                 data-testid="save-category-button"
               >
-                {saving ? "Saving…" : editingCategory ? "Update Category" : "Create Category"}
+                {saving
+                  ? "Saving…"
+                  : editingCategory
+                    ? "Update Category"
+                    : "Create Category"}
               </Button>
             </div>
           </form>
@@ -430,8 +1005,13 @@ const handleSubmit = async (e) => {
         <div className="text-center py-24 bg-white border border-[#F2F0EB] rounded-xl">
           <Layers className="w-12 h-12 text-gray-200 mx-auto mb-4" />
           <p className="text-gray-500 text-lg mb-1">No categories yet.</p>
-          <p className="text-sm text-gray-400 mb-5">Create your first category to organize products.</p>
-          <Button className="bg-[#2C2C2C] text-white hover:bg-[#C5A059]" onClick={handleAdd}>
+          <p className="text-sm text-gray-400 mb-5">
+            Create your first category to organize products.
+          </p>
+          <Button
+            className="bg-[#2C2C2C] text-white hover:bg-[#C5A059]"
+            onClick={handleAdd}
+          >
             <Plus className="w-4 h-4 mr-2" /> Add First Category
           </Button>
         </div>
@@ -450,13 +1030,19 @@ const handleSubmit = async (e) => {
                     src={cat.image_url || fallbacks[idx % fallbacks.length]}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => { e.target.src = fallbacks[idx % fallbacks.length]; }}
+                    onError={(e) => {
+                      e.target.src = fallbacks[idx % fallbacks.length];
+                    }}
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-heading text-base font-medium text-[#2C2C2C] mb-1">{cat.name}</h3>
+                  <h3 className="font-heading text-base font-medium text-[#2C2C2C] mb-1">
+                    {cat.name}
+                  </h3>
                   {cat.description && (
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">{cat.description}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+                      {cat.description}
+                    </p>
                   )}
                   <div className="flex gap-2">
                     <Button
@@ -486,7 +1072,9 @@ const handleSubmit = async (e) => {
           {/* Table — hidden on mobile, shown on md+ */}
           <div className="hidden md:block bg-white border border-[#F2F0EB] rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-[#F2F0EB]">
-              <h2 className="font-heading text-lg font-medium text-[#2C2C2C]">All Categories</h2>
+              <h2 className="font-heading text-lg font-medium text-[#2C2C2C]">
+                All Categories
+              </h2>
             </div>
             <Table>
               <TableHeader>
@@ -499,8 +1087,14 @@ const handleSubmit = async (e) => {
               </TableHeader>
               <TableBody>
                 {categories.map((cat) => (
-                  <TableRow key={cat.id} className="hover:bg-[#F9F8F5]/50" data-testid="category-row">
-                    <TableCell className="font-medium font-heading">{cat.name}</TableCell>
+                  <TableRow
+                    key={cat.id}
+                    className="hover:bg-[#F9F8F5]/50"
+                    data-testid="category-row"
+                  >
+                    <TableCell className="font-medium font-heading">
+                      {cat.name}
+                    </TableCell>
                     <TableCell className="text-gray-500 text-sm max-w-xs truncate">
                       {cat.description || "—"}
                     </TableCell>
@@ -511,7 +1105,9 @@ const handleSubmit = async (e) => {
                             src={cat.image_url}
                             alt={cat.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => { e.target.style.display = "none"; }}
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
                           />
                         </div>
                       ) : (
@@ -521,7 +1117,8 @@ const handleSubmit = async (e) => {
                     <TableCell>
                       <div className="flex gap-1 justify-end pr-2">
                         <Button
-                          variant="ghost" size="sm"
+                          variant="ghost"
+                          size="sm"
                           className="h-8 w-8 p-0 hover:bg-gray-100"
                           onClick={() => handleEdit(cat)}
                           data-testid="edit-category-row-button"
@@ -529,7 +1126,8 @@ const handleSubmit = async (e) => {
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost" size="sm"
+                          variant="ghost"
+                          size="sm"
                           className="h-8 w-8 p-0 hover:bg-red-50"
                           onClick={() => handleDelete(cat.id)}
                           data-testid="delete-category-row-button"
