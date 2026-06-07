@@ -22,7 +22,7 @@ import {
   X,
   Activity
 } from "lucide-react";
-
+import HelthCheck from "./dashboard/HealthCheck.jsx"
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -117,12 +117,13 @@ const Dashboard = () => {
       label: "Audit Logs",
       roles: ["admin"],
     },
-    {
+  {
       path: "/dashboard/health",
       icon: Activity,
       label: "Health Check",
       roles: ["admin"],
     },
+
   ];
 
   const filteredMenuItems = menuItems.filter((item) =>

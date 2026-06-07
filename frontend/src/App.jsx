@@ -57,7 +57,7 @@ const PublicLayout = ({ children }) => (
 function App() {
   useEffect(() => {
     const originalTitle = "GM_Bastralaya";
-    const leaveTitle = "Don't__go! 🛍️";
+    const leaveTitle = "Plss..don't_leave! 🥺";
     let typingInterval;
 
     const handleVisibilityChange = () => {
@@ -72,7 +72,7 @@ function App() {
           } else {
             clearInterval(typingInterval);
           }
-        }, 150); // Speed of typing (150ms per letter)
+        }, 50); // Speed of typing (150ms per letter)
       } else {
         clearInterval(typingInterval);
         document.title = originalTitle;
